@@ -17,7 +17,16 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import Image from "next/image";
 
-const Sidebar = ({ role, setRole, isOpen, setIsOpen }) => {
+type UserRole = 'lecturer' | 'coordinator' | 'registry';
+
+interface SidebarProps {
+  role: UserRole;
+  setRole: (role: UserRole) => void;
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+}
+
+const Sidebar = ({ role, setRole, isOpen, setIsOpen }: SidebarProps) => {
   const menuItems = [
     { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
     { label: "Submit Claim", icon: FileText, href: "/claims" },
@@ -92,7 +101,7 @@ const Sidebar = ({ role, setRole, isOpen, setIsOpen }) => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-48 bg-uew-blue border-uew-dark-blue">
-                    {['lecturer', 'coordinator', 'registry'].map((r) => (
+                    {(['lecturer', 'coordinator', 'registry'] as UserRole[]).map((r) => (
                       <DropdownMenuItem 
                         key={r} 
                         onClick={() => setRole(r)}
@@ -122,7 +131,7 @@ const Sidebar = ({ role, setRole, isOpen, setIsOpen }) => {
 };
 
 const DashboardPage = () => {
-  const [role, setRole] = useState("lecturer");
+  const [role, setRole] = useState<UserRole>("lecturer");
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -219,7 +228,7 @@ const DashboardPage = () => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="w-48 bg-uew-blue border-uew-dark-blue">
-                    {['lecturer', 'coordinator', 'registry'].map((r) => (
+                    {(['lecturer', 'coordinator', 'registry'] as UserRole[]).map((r) => (
                       <DropdownMenuItem 
                         key={r} 
                         onClick={() => setRole(r)}
