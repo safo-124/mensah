@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { User, Briefcase, FileText, CheckCircle, BookOpen, ArrowRight, Home, ClipboardList } from "lucide-react";
+import { User,  FileText, CheckCircle,  ArrowRight, Home, ClipboardList } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

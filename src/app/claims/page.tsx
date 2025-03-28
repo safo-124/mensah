@@ -1,4 +1,3 @@
-// app/claims/page.tsx
 "use client"
 
 import { useActionState, useEffect } from "react";
@@ -13,6 +12,19 @@ import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+type ClaimData = {
+  idNumber: string;
+  fullName: string;
+  designation: string;
+  claimType: string;
+  description: string;
+};
+
+type FormState = {
+  success: boolean;
+  message: string;
+} | null;
+
 const claimTypes = [
   { value: "travel", label: "Travel Expenses" },
   { value: "material", label: "Teaching Materials" },
@@ -22,26 +34,29 @@ const claimTypes = [
 ];
 
 export default function ClaimsPage() {
-  const [state, formAction, isPending] = useActionState(
-    async (prevState: any, formData: FormData) => {
+  const [state, formAction, isPending] = useActionState<FormState, FormData>(
+    async (prevState: FormState, formData: FormData) => {
       try {
-        const claimData = {
-          idNumber: formData.get("idNumber"),
-          fullName: formData.get("fullName"),
-          designation: formData.get("designation"),
-          claimType: formData.get("claimType"),
-          description: formData.get("description"),
+        const claimData: ClaimData = {
+          idNumber: formData.get("idNumber") as string,
+          fullName: formData.get("fullName") as string,
+          designation: formData.get("designation") as string,
+          claimType: formData.get("claimType") as string,
+          description: formData.get("description") as string,
         };
         
+        console.log("Claim Submitted", claimData);
         await new Promise(resolve => setTimeout(resolve, 1000));
+        
         return { 
           success: true, 
           message: "Claim submitted successfully!" 
         };
-      } catch (error) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to submit claim. Please try again.";
         return { 
           success: false, 
-          message: "Failed to submit claim. Please try again." 
+          message: errorMessage 
         };
       }
     },
@@ -50,10 +65,8 @@ export default function ClaimsPage() {
 
   useEffect(() => {
     if (state?.message) {
-      const notification = new Notification(state.message, {
-        body: state.success ? "Your claim is being processed" : "Please check your details",
-        icon: state.success ? "/success-icon.png" : "/error-icon.png"
-      });
+      // Modern alternative to toast - using browser alert
+      alert(state.message);
     }
   }, [state]);
 
