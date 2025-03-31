@@ -1,6 +1,6 @@
 "use client"
 
-import { LayoutDashboard, FileText, CheckCircle, User, ChevronDown, Menu, X, Clock, AlertCircle, DollarSign } from "lucide-react";
+import { LayoutDashboard, FileText, CheckCircle, User, ChevronDown, Menu, X, Clock, AlertCircle, DollarSign, Users, PlusCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
@@ -27,11 +27,28 @@ interface SidebarProps {
 }
 
 const Sidebar = ({ role, setRole, isOpen, setIsOpen }: SidebarProps) => {
-  const menuItems = [
+  const baseMenuItems = [
     { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-    { label: "Submit Claim", icon: FileText, href: "/claims" },
-    ...(role !== "lecturer" ? [{ label: "Approvals", icon: CheckCircle, href: "/approvals" }] : [])
   ];
+
+  const roleSpecificItems = [
+    ...(role === "lecturer" 
+      ? [{ label: "Submit Claim", icon: FileText, href: "/claims" }] 
+      : []),
+    ...(role !== "lecturer" 
+      ? [{ label: "Approvals", icon: CheckCircle, href: "/approvals" }] 
+      : []),
+    ...(role === "registry" 
+      ? [
+          { label: "Create Coordinator", icon: Users, href: "/create/coordinator" },
+          { label: "Create Lecturer", icon: Users, href: "/create/lecturer" }
+        ]
+      : role === "coordinator"
+        ? [{ label: "Create Lecturer", icon: Users, href: "/create/lecturer" }]
+        : [])
+  ];
+
+  const menuItems = [...baseMenuItems, ...roleSpecificItems];
 
   return (
     <AnimatePresence>
@@ -190,13 +207,17 @@ const DashboardPage = () => {
                 <LayoutDashboard className="w-5 h-5 text-uew-gold" />
                 <span className="text-sm font-medium">Dashboard</span>
               </Link>
-              <Link 
-                href="/claims"
-                className="flex items-center gap-3 p-3 rounded-lg hover:bg-uew-dark-blue transition-colors"
-              >
-                <FileText className="w-5 h-5 text-uew-gold" />
-                <span className="text-sm font-medium">Submit Claim</span>
-              </Link>
+              
+              {role === "lecturer" && (
+                <Link 
+                  href="/claims"
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-uew-dark-blue transition-colors"
+                >
+                  <FileText className="w-5 h-5 text-uew-gold" />
+                  <span className="text-sm font-medium">Submit Claim</span>
+                </Link>
+              )}
+              
               {role !== "lecturer" && (
                 <Link 
                   href="/approvals"
@@ -204,6 +225,35 @@ const DashboardPage = () => {
                 >
                   <CheckCircle className="w-5 h-5 text-uew-gold" />
                   <span className="text-sm font-medium">Approvals</span>
+                </Link>
+              )}
+              
+              {role === "registry" && (
+                <>
+                  <Link 
+                    href="/create/coordinator"
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-uew-dark-blue transition-colors"
+                  >
+                    <Users className="w-5 h-5 text-uew-gold" />
+                    <span className="text-sm font-medium">Create Coordinator</span>
+                  </Link>
+                  <Link 
+                    href="/create/lecturer"
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-uew-dark-blue transition-colors"
+                  >
+                    <Users className="w-5 h-5 text-uew-gold" />
+                    <span className="text-sm font-medium">Create Lecturer</span>
+                  </Link>
+                </>
+              )}
+              
+              {role === "coordinator" && (
+                <Link 
+                  href="/create/lecturer"
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-uew-dark-blue transition-colors"
+                >
+                  <Users className="w-5 h-5 text-uew-gold" />
+                  <span className="text-sm font-medium">Create Lecturer</span>
                 </Link>
               )}
             </nav>
@@ -372,18 +422,29 @@ const DashboardPage = () => {
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button className="w-full bg-uew-blue hover:bg-uew-dark-blue" asChild>
-                  <Link href="/claims">
-                    <FileText className="w-4 h-4 mr-2" />
-                    Submit New Claim
-                  </Link>
-                </Button>
+                {role === "lecturer" && (
+                  <Button className="w-full bg-uew-blue hover:bg-uew-dark-blue" asChild>
+                    <Link href="/claims">
+                      <FileText className="w-4 h-4 mr-2" />
+                      Submit New Claim
+                    </Link>
+                  </Button>
+                )}
                 
                 {role !== "lecturer" && (
                   <Button variant="outline" className="w-full border-uew-blue text-uew-blue hover:bg-uew-light-blue" asChild>
                     <Link href="/approvals">
                       <CheckCircle className="w-4 h-4 mr-2" />
                       Review Approvals
+                    </Link>
+                  </Button>
+                )}
+                
+                {(role === "registry" || role === "coordinator") && (
+                  <Button variant="outline" className="w-full border-uew-blue text-uew-blue hover:bg-uew-light-blue" asChild>
+                    <Link href={role === "registry" ? "/create/coordinator" : "/create/lecturer"}>
+                      <PlusCircle className="w-4 h-4 mr-2" />
+                      {role === "registry" ? "Create Coordinator" : "Create Lecturer"}
                     </Link>
                   </Button>
                 )}
