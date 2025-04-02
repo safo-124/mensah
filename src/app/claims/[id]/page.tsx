@@ -1,14 +1,13 @@
 "use client"
 
 import React from "react";
-import { CheckCircle, XCircle, Clock, Calendar, MapPin,  ChevronLeft, Printer } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Calendar, MapPin, ChevronLeft, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-
 import { useRef } from "react";
 
 type ClaimStatus = 'pending' | 'approved' | 'rejected';
@@ -36,7 +35,16 @@ interface TeachingClaim {
   submittedDate: string;
 }
 
-const ClaimDetailsPage = ({ params }: { params: { id: string } }) => {
+interface PageProps {
+  params: {
+    id: string
+  }
+  searchParams?: {
+    [key: string]: string | string[] | undefined
+  }
+}
+
+const ClaimDetailsPage = ({ params }: PageProps) => {
   const router = useRouter();
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -62,22 +70,6 @@ const ClaimDetailsPage = ({ params }: { params: { id: string } }) => {
     studentCount: 45,
     submittedDate: "2023-10-16T09:30:00Z"
   };
-
-  /**const handlePrint = useReactToPrint({
-    contentRef: () => printRef.current,
-    pageStyle: `
-      @page {
-        size: A4;
-        margin: 10mm;
-      }
-      @media print {
-        body {
-          -webkit-print-color-adjust: exact;
-        }
-      }
-    `,
-    documentTitle: `UEW_Teaching_Claim_${claim.id}`
-  }); */
 
   const handleApprove = () => {
     // In a real app, you would make an API call here
@@ -299,7 +291,7 @@ const ClaimDetailsPage = ({ params }: { params: { id: string } }) => {
       </div>
 
       <div className="flex justify-end gap-4 mt-6 print:hidden">
-        <Button variant="outline"  className="flex items-center gap-2">
+        <Button variant="outline" className="flex items-center gap-2">
           <Printer className="h-4 w-4" />
           Print Claim
         </Button>
