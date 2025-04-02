@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
-import { User,  FileText, CheckCircle,  ArrowRight, Home, ClipboardList } from "lucide-react";
+import { User, Receipt, CheckCircle, ArrowRight, Home, ClipboardList, FileText } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,13 +13,12 @@ const UEWLandingPage = () => {
   const [role, setRole] = useState("lecturer");
   const [isHovered, setIsHovered] = useState(false);
 
-  // UEW-specific features
+  // UEW-specific features with appropriate icons
   const features = [
     {
       title: "Expense Claims",
       description: "Submit teaching and research expense claims",
       icon: FileText,
-      color: "text-blue-600"
     },
     {
       title: "Approval Workflow",
@@ -37,7 +36,7 @@ const UEWLandingPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* University Header */}
+      {/* University Header with Logo */}
       <header className="bg-blue-800 text-white py-4 px-6 shadow-md">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -74,7 +73,7 @@ const UEWLandingPage = () => {
           </p>
         </motion.div>
 
-        {/* Features Grid */}
+        {/* Features Grid with Proper Icons */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
           {features.map((feature, index) => (
             <motion.div
@@ -86,7 +85,7 @@ const UEWLandingPage = () => {
             >
               <Card className="h-full hover:shadow-lg transition-shadow">
                 <CardContent className="p-6">
-                  <div className={`mb-4 p-3 rounded-lg bg-opacity-20 ${feature.color.replace('text', 'bg')} w-fit`}>
+                  <div className={`mb-4 p-3 rounded-lg bg-opacity-20  w-fit`}>
                     <feature.icon className={`w-6 h-6 ${feature.color}`} />
                   </div>
                   <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
@@ -97,7 +96,7 @@ const UEWLandingPage = () => {
           ))}
         </div>
 
-        {/* Role Selection */}
+        {/* Role Selection Card */}
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -159,7 +158,7 @@ const UEWLandingPage = () => {
                           size="lg" 
                           className="w-full border-blue-800 text-blue-800 hover:bg-blue-50 flex items-center gap-2"
                         >
-                          <FileText className="w-5 h-5" />
+                          <Receipt className="w-5 h-5" />
                           Submit New Claim
                         </Button>
                       </Link>
@@ -171,7 +170,7 @@ const UEWLandingPage = () => {
           </Card>
         </motion.div>
 
-        {/* Footer */}
+        {/* Footer with University Branding */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
