@@ -1,6 +1,6 @@
-/**"use client"
+"use client"
 
-import { User, Mail, Phone, GraduationCap, MapPin, Briefcase, ArrowLeft, CheckCircle } from "lucide-react";
+import { User, Mail, Phone, GraduationCap, MapPin, Briefcase, ArrowLeft, CheckCircle, Shield, UserCog } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,14 +10,12 @@ import Link from "next/link";
 import { useActionState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
-// Define roles as constants for better type safety
-const Roles = {
-  REGISTRY: 'registry',
-  COORDINATOR: 'coordinator'
-} as const;
-
-type UserRole = typeof Roles[keyof typeof Roles];
+enum UserRole {
+  REGISTRY = 'registry',
+  COORDINATOR = 'coordinator'
+}
 
 type FormState = {
   success: boolean;
@@ -43,6 +41,10 @@ const studyCenters = [
 ] as const;
 
 export default function CreateLecturerPage() {
+  // In a real app, this would come from auth context
+  const currentUserRole: UserRole = UserRole.REGISTRY; // Change to test different roles
+  const coordinatorStudyCenter = "Accra Main Campus"; // Would come from user data
+
   const [state, formAction, isPending] = useActionState<FormState, FormData>(
     async (prevState: FormState, formData: FormData) => {
       try {
@@ -52,9 +54,11 @@ export default function CreateLecturerPage() {
           email: formData.get("email") as string,
           phone: formData.get("phone") as string,
           department: formData.get("department") as string,
-          studyCenter: formData.get("studyCenter") as string,
+          studyCenter: currentUserRole === UserRole.REGISTRY
+            ? coordinatorStudyCenter 
+            : formData.get("studyCenter") as string,
           qualification: formData.get("qualification") as string,
-          role: "lecturer" as const
+          role: "lecturer"
         };
         
         console.log("Lecturer Created", lecturerData);
@@ -81,10 +85,6 @@ export default function CreateLecturerPage() {
     }
   }, [state]);
 
-  // Get user's role from auth context in a real app
-  const currentUserRole: UserRole = Roles.COORDINATOR;
-  const coordinatorStudyCenter = "Accra Main Campus";
-
   return (
     <motion.div 
       initial={{ opacity: 0 }}
@@ -93,19 +93,32 @@ export default function CreateLecturerPage() {
       className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 p-4 md:p-8"
     >
       <div className="max-w-4xl mx-auto">
-        <motion.div
-          whileHover={{ x: -5 }}
-          className="inline-block mb-6"
-        >
-          <Link 
-            href="/dashboard" 
-            className="flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Dashboard
-          </Link>
-        </motion.div>
-        
+        <div className="flex justify-between items-start mb-6">
+          <motion.div whileHover={{ x: -5 }}>
+            <Link 
+              href="/dashboard" 
+              className="flex items-center gap-2 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
+            </Link>
+          </motion.div>
+          
+          <Badge variant="outline" className="flex items-center gap-2">
+            {currentUserRole === UserRole.REGISTRY ? (
+              <>
+                <Shield className="h-3 w-3" />
+                Registry Admin
+              </>
+            ) : (
+              <>
+                <UserCog className="h-3 w-3" />
+                Center Coordinator
+              </>
+            )}
+          </Badge>
+        </div>
+
         <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -113,9 +126,16 @@ export default function CreateLecturerPage() {
           className="flex items-center gap-3 mb-6"
         >
           <User className="h-8 w-8 text-blue-600" />
-          <h1 className="text-3xl font-bold text-gray-800">
-            {currentUserRole === Roles.REGISTRY ? "Create New Lecturer" : "Add Lecturer to Your Center"}
-          </h1>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800">
+              {currentUserRole === UserRole.REGISTRY ? "Register New Lecturer" : "Add Lecturer to Your Center"}
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">
+              {currentUserRole === UserRole.REGISTRY 
+                ? "Fill in the lecturer details for university records" 
+                : `Add a new lecturer to ${coordinatorStudyCenter}`}
+            </p>
+          </div>
         </motion.div>
         
         <Separator className="my-6 bg-blue-100" />
@@ -129,140 +149,158 @@ export default function CreateLecturerPage() {
             <CardHeader className="border-b border-blue-50">
               <CardTitle className="text-xl flex items-center gap-2">
                 <User className="h-5 w-5 text-blue-500" />
-                <span>Lecturer Information</span>
+                <span>Lecturer Details</span>
               </CardTitle>
             </CardHeader>
             
             <CardContent className="p-6">
               <form action={formAction} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-gray-700">
-                        <User className="h-4 w-4" />
-                        First Name
-                      </Label>
-                      <Input 
-                        name="firstName" 
-                        required 
-                        placeholder="John"
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
+                  {/* Personal Information Section */}
+                  <div className="md:col-span-2">
+                    <h3 className="font-medium flex items-center gap-2 text-gray-700 mb-4">
+                      <User className="h-4 w-4" />
+                      Personal Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <motion.div whileHover={{ scale: 1.01 }}>
+                        <div className="space-y-2">
+                          <Label>First Name</Label>
+                          <Input 
+                            name="firstName" 
+                            required 
+                            placeholder="John"
+                            className="focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </motion.div>
+                      
+                      <motion.div whileHover={{ scale: 1.01 }}>
+                        <div className="space-y-2">
+                          <Label>Last Name</Label>
+                          <Input 
+                            name="lastName" 
+                            required 
+                            placeholder="Doe"
+                            className="focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </motion.div>
+                      
+                      <motion.div whileHover={{ scale: 1.01 }}>
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2">
+                            <Mail className="h-4 w-4" />
+                            Email Address
+                          </Label>
+                          <Input 
+                            name="email" 
+                            required 
+                            type="email"
+                            placeholder="john.doe@uew.edu.gh"
+                            className="focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </motion.div>
+                      
+                      <motion.div whileHover={{ scale: 1.01 }}>
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2">
+                            <Phone className="h-4 w-4" />
+                            Phone Number
+                          </Label>
+                          <Input 
+                            name="phone" 
+                            required 
+                            type="tel"
+                            placeholder="0244123456"
+                            className="focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </motion.div>
                     </div>
-                  </motion.div>
+                  </div>
                   
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-gray-700">
-                        <User className="h-4 w-4" />
-                        Last Name
-                      </Label>
-                      <Input 
-                        name="lastName" 
-                        required 
-                        placeholder="Doe"
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
+                  {/* Academic Information Section */}
+                  <div className="md:col-span-2">
+                    <h3 className="font-medium flex items-center gap-2 text-gray-700 mb-4">
+                      <GraduationCap className="h-4 w-4" />
+                      Academic Information
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <motion.div whileHover={{ scale: 1.01 }}>
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2">
+                            <GraduationCap className="h-4 w-4" />
+                            Highest Qualification
+                          </Label>
+                          <Input 
+                            name="qualification" 
+                            required 
+                            placeholder="PhD, MPhil, etc."
+                            className="focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </motion.div>
+                      
+                      <motion.div whileHover={{ scale: 1.01 }}>
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2">
+                            <Briefcase className="h-4 w-4" />
+                            Department
+                          </Label>
+                          <Select name="department" required>
+                            <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
+                              <SelectValue placeholder="Select department" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {departments.map((dept) => (
+                                <SelectItem key={dept} value={dept}>
+                                  {dept}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </motion.div>
+                      
+                      {/* Study Center Field - Different for each role */}
+                      <motion.div whileHover={{ scale: 1.01 }} className="md:col-span-2">
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4" />
+                            Study Center
+                          </Label>
+                          {currentUserRole === UserRole.REGISTRY ? (
+                            <Select name="studyCenter" required>
+                              <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
+                                <SelectValue placeholder="Select study center" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {studyCenters.map((center) => (
+                                  <SelectItem key={center} value={center}>
+                                    {center}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <div className="flex items-center gap-3">
+                              <Input 
+                                name="studyCenter" 
+                                readOnly 
+                                value={coordinatorStudyCenter}
+                                className="bg-gray-100 focus:ring-2 focus:ring-blue-500"
+                              />
+                              <Badge variant="secondary" className="whitespace-nowrap">
+                                Your Center
+                              </Badge>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
                     </div>
-                  </motion.div>
-                  
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-gray-700">
-                        <Mail className="h-4 w-4" />
-                        Email Address
-                      </Label>
-                      <Input 
-                        name="email" 
-                        required 
-                        type="email"
-                        placeholder="john.doe@uew.edu.gh"
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-gray-700">
-                        <Phone className="h-4 w-4" />
-                        Phone Number
-                      </Label>
-                      <Input 
-                        name="phone" 
-                        required 
-                        type="tel"
-                        placeholder="0244123456"
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-gray-700">
-                        <GraduationCap className="h-4 w-4" />
-                        Highest Qualification
-                      </Label>
-                      <Input 
-                        name="qualification" 
-                        required 
-                        placeholder="PhD, MPhil, etc."
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-gray-700">
-                        <Briefcase className="h-4 w-4" />
-                        Department
-                      </Label>
-                      <Select name="department" required>
-                        <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
-                          <SelectValue placeholder="Select department" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {departments.map((dept) => (
-                            <SelectItem key={dept} value={dept}>
-                              {dept}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-gray-700">
-                        <MapPin className="h-4 w-4" />
-                        Study Center
-                      </Label>
-                      {currentUserRole === Roles.REGISTRY ? (
-                        <Select name="studyCenter" required>
-                          <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
-                            <SelectValue placeholder="Select study center" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {studyCenters.map((center) => (
-                              <SelectItem key={center} value={center}>
-                                {center}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <Input 
-                          name="studyCenter" 
-                          readOnly 
-                          value={coordinatorStudyCenter}
-                          className="bg-gray-100 focus:ring-2 focus:ring-blue-500"
-                        />
-                      )}
-                    </div>
-                  </motion.div>
+                  </div>
                 </div>
                 
                 <Separator className="my-6" />
@@ -298,7 +336,7 @@ export default function CreateLecturerPage() {
                     ) : (
                       <span className="flex items-center gap-2">
                         <CheckCircle className="h-4 w-4" />
-                        Create Lecturer
+                        {currentUserRole === UserRole.REGISTRY ? "Register Lecturer" : "Add Lecturer"}
                       </span>
                     )}
                   </Button>
@@ -319,4 +357,4 @@ export default function CreateLecturerPage() {
       </div>
     </motion.div>
   );
-}*/
+}
