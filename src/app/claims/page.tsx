@@ -1,8 +1,8 @@
 "use client"
 
-import { useActionState, useEffect } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, FileText, User, IdCard, Briefcase, Phone, Mail, GraduationCap, Book, MapPin, Banknote } from "lucide-react";
+import { ArrowLeft, FileText, Car, BookOpen, GraduationCap, Clock, Calendar, MapPin, Hash, User, Book, Award } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,63 +11,96 @@ import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+type ClaimType = "transportation" | "teaching" | "thesis";
+
+type TransportationClaim = {
+  claimType: "transportation";
+  transportMode: "public" | "private";
+  registrationNumber?: string;
+  cubicCapacity?: string;
+  destinationFrom: string;
+  destinationTo: string;
+  date: string;
+  distance: string;
+};
+
+type TeachingClaim = {
+  claimType: "teaching";
+  date: string;
+  courseCode: string;
+  contactHours: string;
+  startTime: string;
+  endTime: string;
+};
+
+type ThesisClaim = {
+  claimType: "thesis";
+  thesisType: "supervision" | "examination";
+  degree: "PhD" | "MPhil" | "MA" | "Ed" | "PGDE";
+  studentNumber: string;
+  studentName: string;
+  thesisTitle: string;
+};
+
 type ClaimData = {
   claimId: string;
-  surname: string;
-  firstName: string;
-  otherName: string;
-  gender: string;
-  telephone: string;
-  email: string;
-  ghanaCard: string;
-  qualification: string;
-  designation: string;
-  department: string;
-  subjectArea: string;
-  studyCenter: string;
-  branch: string;
-  accountNumber: string;
-};
+} & (TransportationClaim | TeachingClaim | ThesisClaim);
 
 type FormState = {
   success: boolean;
   message: string;
 } | null;
 
-const ghanaRegions = [
-  "Ahafo", "Ashanti", "Bono", "Bono East", "Central", "Eastern", 
-  "Greater Accra", "North East", "Northern", "Oti", "Savannah", 
-  "Upper East", "Upper West", "Volta", "Western", "Western North"
-];
-
-const genders = [
-  { value: "male", label: "Male" },
-  { value: "female", label: "Female" },
-  { value: "other", label: "Other" }
-];
+const degrees = ["PhD", "MPhil", "MA", "Ed", "PGDE"] as const;
+const transportModes = ["public", "private"] as const;
+const thesisTypes = ["supervision", "examination"] as const;
 
 export default function ClaimsPage() {
+  const [claimType, setClaimType] = useState<ClaimType>("transportation");
   const [state, formAction, isPending] = useActionState<FormState, FormData>(
     async (prevState: FormState, formData: FormData) => {
       try {
-        const claimData: ClaimData = {
+        const baseData = {
           claimId: formData.get("claimId") as string,
-          surname: formData.get("surname") as string,
-          firstName: formData.get("firstName") as string,
-          otherName: formData.get("otherName") as string,
-          gender: formData.get("gender") as string,
-          telephone: formData.get("telephone") as string,
-          email: formData.get("email") as string,
-          ghanaCard: formData.get("ghanaCard") as string,
-          qualification: formData.get("qualification") as string,
-          designation: formData.get("designation") as string,
-          department: formData.get("department") as string,
-          subjectArea: formData.get("subjectArea") as string,
-          studyCenter: formData.get("studyCenter") as string,
-          branch: formData.get("branch") as string,
-          accountNumber: formData.get("accountNumber") as string,
+          claimType: formData.get("claimType") as ClaimType,
         };
-        
+
+        let claimData: ClaimData;
+
+        if (baseData.claimType === "transportation") {
+          claimData = {
+            ...baseData,
+            claimType: "transportation",
+            transportMode: formData.get("transportMode") as "public" | "private",
+            registrationNumber: formData.get("registrationNumber") as string,
+            cubicCapacity: formData.get("cubicCapacity") as string,
+            destinationFrom: formData.get("destinationFrom") as string,
+            destinationTo: formData.get("destinationTo") as string,
+            date: formData.get("date") as string,
+            distance: formData.get("distance") as string,
+          };
+        } else if (baseData.claimType === "teaching") {
+          claimData = {
+            ...baseData,
+            claimType: "teaching",
+            date: formData.get("date") as string,
+            courseCode: formData.get("courseCode") as string,
+            contactHours: formData.get("contactHours") as string,
+            startTime: formData.get("startTime") as string,
+            endTime: formData.get("endTime") as string,
+          };
+        } else {
+          claimData = {
+            ...baseData,
+            claimType: "thesis",
+            thesisType: formData.get("thesisType") as "supervision" | "examination",
+            degree: formData.get("degree") as "PhD" | "MPhil" | "MA" | "Ed" | "PGDE",
+            studentNumber: formData.get("studentNumber") as string,
+            studentName: formData.get("studentName") as string,
+            thesisTitle: formData.get("thesisTitle") as string,
+          };
+        }
+
         console.log("Claim Submitted", claimData);
         await new Promise(resolve => setTimeout(resolve, 1000));
         
@@ -140,12 +173,12 @@ export default function ClaimsPage() {
             
             <CardContent className="p-6">
               <form action={formAction} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
                   {/* Claim ID */}
                   <motion.div whileHover={{ scale: 1.01 }}>
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-gray-700">
-                        <IdCard className="h-4 w-4" />
+                        <Hash className="h-4 w-4" />
                         Claim ID
                       </Label>
                       <Input 
@@ -157,231 +190,310 @@ export default function ClaimsPage() {
                     </div>
                   </motion.div>
 
-                  {/* Personal Information Section */}
+                  {/* Claim Type Selection */}
                   <motion.div whileHover={{ scale: 1.01 }}>
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-gray-700">
-                        <User className="h-4 w-4" />
-                        Surname
+                        <FileText className="h-4 w-4" />
+                        Claim Type
                       </Label>
-                      <Input 
-                        name="surname" 
+                      <Select 
+                        name="claimType" 
                         required 
-                        placeholder="Doe"
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-gray-700">
-                        <User className="h-4 w-4" />
-                        First Name
-                      </Label>
-                      <Input 
-                        name="firstName" 
-                        required 
-                        placeholder="John"
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-gray-700">
-                        <User className="h-4 w-4" />
-                        Other Name
-                      </Label>
-                      <Input 
-                        name="otherName" 
-                        placeholder="Kwame"
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-gray-700">
-                        <User className="h-4 w-4" />
-                        Gender
-                      </Label>
-                      <Select name="gender" required>
+                        onValueChange={(value: ClaimType) => setClaimType(value)}
+                        defaultValue="transportation"
+                      >
                         <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
-                          <SelectValue placeholder="Select gender" />
+                          <SelectValue placeholder="Select claim type" />
                         </SelectTrigger>
                         <SelectContent>
-                          {genders.map((gender) => (
-                            <SelectItem key={gender.value} value={gender.value}>
-                              {gender.label}
-                            </SelectItem>
-                          ))}
+                          <SelectItem value="transportation">
+                            <div className="flex items-center gap-2">
+                              <Car className="h-4 w-4" />
+                              Transportation Claim
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="teaching">
+                            <div className="flex items-center gap-2">
+                              <BookOpen className="h-4 w-4" />
+                              Teaching Claim
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="thesis">
+                            <div className="flex items-center gap-2">
+                              <GraduationCap className="h-4 w-4" />
+                              Thesis Claim
+                            </div>
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </motion.div>
-                  
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-gray-700">
-                        <Phone className="h-4 w-4" />
-                        Telephone Number
-                      </Label>
-                      <Input 
-                        name="telephone" 
-                        required 
-                        type="tel"
-                        placeholder="0244123456"
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-gray-700">
-                        <Mail className="h-4 w-4" />
-                        Email Address
-                      </Label>
-                      <Input 
-                        name="email" 
-                        required 
-                        type="email"
-                        placeholder="john.doe@example.com"
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-gray-700">
-                        <IdCard className="h-4 w-4" />
-                        Ghana Card Number
-                      </Label>
-                      <Input 
-                        name="ghanaCard" 
-                        required 
-                        placeholder="GHA-123456789-1"
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </motion.div>
-                  
-                  {/* Professional Information Section */}
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-gray-700">
-                        <GraduationCap className="h-4 w-4" />
-                        Highest Qualification
-                      </Label>
-                      <Input 
-                        name="qualification" 
-                        required 
-                        placeholder="PhD, MPhil, etc."
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-gray-700">
-                        <Briefcase className="h-4 w-4" />
-                        Designation
-                      </Label>
-                      <Input 
-                        name="designation" 
-                        required 
-                        placeholder="Senior Lecturer"
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-gray-700">
-                        <Briefcase className="h-4 w-4" />
-                        Department
-                      </Label>
-                      <Input 
-                        name="department" 
-                        required 
-                        placeholder="Computer Science"
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-gray-700">
-                        <Book className="h-4 w-4" />
-                        Subject Area
-                      </Label>
-                      <Input 
-                        name="subjectArea" 
-                        required 
-                        placeholder="Data Structures"
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-gray-700">
-                        <MapPin className="h-4 w-4" />
-                        Study Center
-                      </Label>
-                      <Input 
-                        name="studyCenter" 
-                        required 
-                        placeholder="Accra Main Campus"
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-gray-700">
-                        <MapPin className="h-4 w-4" />
-                        Branch (Region)
-                      </Label>
-                      <Select name="branch" required>
-                        <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
-                          <SelectValue placeholder="Select region" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {ghanaRegions.map((region) => (
-                            <SelectItem key={region} value={region}>
-                              {region}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <div className="space-y-2">
-                      <Label className="flex items-center gap-2 text-gray-700">
-                        <Banknote className="h-4 w-4" />
-                        Account Number
-                      </Label>
-                      <Input 
-                        name="accountNumber" 
-                        required 
-                        type="number"
-                        placeholder="1234567890"
-                        className="focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  </motion.div>
+
+                  {/* Dynamic Form Fields Based on Claim Type */}
+                  {claimType === "transportation" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4"
+                    >
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-gray-700">
+                          <Car className="h-4 w-4" />
+                          Transport Mode
+                        </Label>
+                        <Select name="transportMode" required>
+                          <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
+                            <SelectValue placeholder="Select transport mode" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {transportModes.map((mode) => (
+                              <SelectItem key={mode} value={mode}>
+                                {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-gray-700">
+                          <Hash className="h-4 w-4" />
+                          Registration Number
+                        </Label>
+                        <Input 
+                          name="registrationNumber" 
+                          placeholder="GT 1234-20"
+                          className="focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-gray-700">
+                          <Car className="h-4 w-4" />
+                          Cubic Capacity (cc)
+                        </Label>
+                        <Input 
+                          name="cubicCapacity" 
+                          type="number"
+                          placeholder="2000"
+                          className="focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-gray-700">
+                          <MapPin className="h-4 w-4" />
+                          Destination From
+                        </Label>
+                        <Input 
+                          name="destinationFrom" 
+                          required 
+                          placeholder="Starting location"
+                          className="focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-gray-700">
+                          <MapPin className="h-4 w-4" />
+                          Destination To
+                        </Label>
+                        <Input 
+                          name="destinationTo" 
+                          required 
+                          placeholder="Destination"
+                          className="focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-gray-700">
+                          <Calendar className="h-4 w-4" />
+                          Date
+                        </Label>
+                        <Input 
+                          name="date" 
+                          required 
+                          type="date"
+                          className="focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-gray-700">
+                          <MapPin className="h-4 w-4" />
+                          Distance (km)
+                        </Label>
+                        <Input 
+                          name="distance" 
+                          required 
+                          type="number"
+                          placeholder="Distance in kilometers"
+                          className="focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {claimType === "teaching" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4"
+                    >
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-gray-700">
+                          <Calendar className="h-4 w-4" />
+                          Date
+                        </Label>
+                        <Input 
+                          name="date" 
+                          required 
+                          type="date"
+                          className="focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-gray-700">
+                          <Book className="h-4 w-4" />
+                          Course Code
+                        </Label>
+                        <Input 
+                          name="courseCode" 
+                          required 
+                          placeholder="CS-101"
+                          className="focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-gray-700">
+                          <Clock className="h-4 w-4" />
+                          Number of Contact Hours
+                        </Label>
+                        <Input 
+                          name="contactHours" 
+                          required 
+                          type="number"
+                          placeholder="2"
+                          className="focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-gray-700">
+                          <Clock className="h-4 w-4" />
+                          Start Time
+                        </Label>
+                        <Input 
+                          name="startTime" 
+                          required 
+                          type="time"
+                          className="focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-gray-700">
+                          <Clock className="h-4 w-4" />
+                          End Time
+                        </Label>
+                        <Input 
+                          name="endTime" 
+                          required 
+                          type="time"
+                          className="focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {claimType === "thesis" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4"
+                    >
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-gray-700">
+                          <Book className="h-4 w-4" />
+                          Thesis Type
+                        </Label>
+                        <Select name="thesisType" required>
+                          <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
+                            <SelectValue placeholder="Select thesis type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {thesisTypes.map((type) => (
+                              <SelectItem key={type} value={type}>
+                                {type.charAt(0).toUpperCase() + type.slice(1)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-gray-700">
+                          <Award className="h-4 w-4" />
+                          Degree
+                        </Label>
+                        <Select name="degree" required>
+                          <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
+                            <SelectValue placeholder="Select degree" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {degrees.map((degree) => (
+                              <SelectItem key={degree} value={degree}>
+                                {degree}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-gray-700">
+                          <Hash className="h-4 w-4" />
+                          Student Number
+                        </Label>
+                        <Input 
+                          name="studentNumber" 
+                          required 
+                          placeholder="STD-12345"
+                          className="focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-2 text-gray-700">
+                          <User className="h-4 w-4" />
+                          Student Name
+                        </Label>
+                        <Input 
+                          name="studentName" 
+                          required 
+                          placeholder="John Doe"
+                          className="focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      <div className="space-y-2 col-span-1 md:col-span-2">
+                        <Label className="flex items-center gap-2 text-gray-700">
+                          <Book className="h-4 w-4" />
+                          Title of Thesis
+                        </Label>
+                        <Input 
+                          name="thesisTitle" 
+                          required 
+                          placeholder="Thesis title"
+                          className="focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
                 
                 <motion.div 
