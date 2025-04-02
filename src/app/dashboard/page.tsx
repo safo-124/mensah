@@ -157,7 +157,6 @@ const Sidebar = ({ role, setRole, isOpen, setIsOpen }: SidebarProps) => {
 };
 
 const DashboardPage = () => {
-  const [role, setRole] = useState<UserRole>("lecturer");
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -169,6 +168,21 @@ const DashboardPage = () => {
     mampongLecturers: 0,
     winnebaLecturers: 0
   });
+
+  // Get role from localStorage or default to 'lecturer'
+  const [role, setRole] = useState<UserRole>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('userRole') as UserRole) || 'lecturer';
+    }
+    return 'lecturer';
+  });
+
+  // Persist role to localStorage when it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('userRole', role);
+    }
+  }, [role]);
 
   // Simulate fetching staff counts from API
   useEffect(() => {
