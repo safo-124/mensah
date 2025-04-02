@@ -63,7 +63,8 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@tanstack/react-query-devtools": "^5.71.2",
+    "@types/node": "^20.17.30",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

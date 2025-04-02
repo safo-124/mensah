@@ -26,6 +26,15 @@ interface SidebarProps {
   setIsOpen: (isOpen: boolean) => void;
 }
 
+interface StaffCounts {
+  coordinators: number;
+  lecturers: number;
+  accraLecturers: number;
+  kumasiLecturers: number;
+  mampongLecturers: number;
+  winnebaLecturers: number;
+}
+
 const Sidebar = ({ role, setRole, isOpen, setIsOpen }: SidebarProps) => {
   const baseMenuItems = [
     { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
@@ -152,6 +161,32 @@ const DashboardPage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [staffCounts, setStaffCounts] = useState<StaffCounts>({
+    coordinators: 0,
+    lecturers: 0,
+    accraLecturers: 0,
+    kumasiLecturers: 0,
+    mampongLecturers: 0,
+    winnebaLecturers: 0
+  });
+
+  // Simulate fetching staff counts from API
+  useEffect(() => {
+    const fetchStaffCounts = async () => {
+      // In a real app, you would fetch this from your API
+      const mockData: StaffCounts = {
+        coordinators: 12,
+        lecturers: 85,
+        accraLecturers: 35,
+        kumasiLecturers: 20,
+        mampongLecturers: 15,
+        winnebaLecturers: 15
+      };
+      setStaffCounts(mockData);
+    };
+
+    fetchStaffCounts();
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -169,6 +204,18 @@ const DashboardPage = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  const getCoordinatorCenterCount = () => {
+    // In a real app, you would get the coordinator's assigned center from their profile
+    const coordinatorCenter = "accra"; // Example: Accra is the assigned center
+    switch (coordinatorCenter) {
+      case "accra": return staffCounts.accraLecturers;
+      case "kumasi": return staffCounts.kumasiLecturers;
+      case "mampong": return staffCounts.mampongLecturers;
+      case "winneba": return staffCounts.winnebaLecturers;
+      default: return 0;
+    }
+  };
+
   const stats = [
     { title: "Total Claims", value: "120", icon: FileText, trend: "↑ 12%", positive: true },
     ...(role !== "lecturer" 
@@ -177,8 +224,14 @@ const DashboardPage = () => {
     { title: "Approved Claims", value: "90", icon: CheckCircle, trend: "↑ 8%", positive: true },
     { title: "Total Amount", value: "₵12,450", icon: DollarSign, trend: "↑ 15%", positive: true },
     ...(role === "registry" 
-      ? [{ title: "Rejected Claims", value: "5", icon: AlertCircle, trend: "↓ 2%", positive: false }] 
-      : [])
+      ? [ 
+          { title: "Rejected Claims", value: "5", icon: AlertCircle, trend: "↓ 2%", positive: false },
+          { title: "Total Coordinators", value: staffCounts.coordinators, icon: Users, trend: "", positive: true },
+          { title: "Total Lecturers", value: staffCounts.lecturers, icon: Users, trend: "", positive: true }
+        ]
+      : role === "coordinator"
+        ? [{ title: "Lecturers in Center", value: getCoordinatorCenterCount(), icon: Users, trend: "", positive: true }]
+        : [])
   ];
 
   return (
@@ -348,7 +401,7 @@ const DashboardPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
             <motion.div
-              key={stat.title}
+              key={`${stat.title}-${index}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
@@ -364,9 +417,11 @@ const DashboardPage = () => {
                       <stat.icon className={`w-5 h-5 ${stat.positive ? 'text-blue-600' : 'text-orange-600'}`} />
                     </div>
                   </div>
-                  <div className={`flex items-center mt-4 text-sm ${stat.positive ? 'text-green-600' : 'text-orange-600'}`}>
-                    {stat.trend} <span className="text-gray-500 ml-1">vs last month</span>
-                  </div>
+                  {stat.trend && (
+                    <div className={`flex items-center mt-4 text-sm ${stat.positive ? 'text-green-600' : 'text-orange-600'}`}>
+                      {stat.trend} <span className="text-gray-500 ml-1">vs last month</span>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
