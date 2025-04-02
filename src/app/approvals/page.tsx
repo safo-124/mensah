@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState, useEffect, useRef } from "react";
-import { FileText, CheckCircle, XCircle, Search, Filter, Menu, LayoutDashboard, User, ChevronDown, X, Users, Clock, Calendar, MapPin, Printer } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { FileText, CheckCircle, XCircle, Search, Filter, Menu, LayoutDashboard, User, ChevronDown, X, Users, MapPin, Calendar, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
@@ -17,7 +17,6 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
-import { useReactToPrint } from "react-to-print";
 
 type UserRole = 'lecturer' | 'coordinator' | 'registry';
 type ClaimStatus = 'pending' | 'approved' | 'rejected';
@@ -250,159 +249,6 @@ const Sidebar = ({ role, setRole, isOpen, setIsOpen }: {
   );
 };
 
-// Component for the printable content
-const PrintableContent = React.forwardRef<HTMLDivElement, { 
-  claims: TeachingClaim[]; 
-  role: UserRole;
-  searchTerm: string;
-  filterStatus: ClaimStatus | "all";
-  filterMonth: string;
-  filterYear: string;
-  filterStudyCenter: string;
-}>(({ claims, role, searchTerm, filterStatus, filterMonth, filterYear, filterStudyCenter }, ref) => {
-  // Filter claims (same logic as in main component)
-  const filteredClaims = claims.filter(claim => {
-    if (role === "coordinator") {
-      const coordinatorStudyCenter = "Accra Main Campus";
-      if (claim.studyCenter !== coordinatorStudyCenter) return false;
-    }
-    
-    const matchesSearch = 
-      claim.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      claim.serialNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      claim.lecturer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      claim.courseCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      claim.courseTitle.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = filterStatus === "all" || claim.status === filterStatus;
-    const matchesMonth = filterMonth === "all" || claim.month === filterMonth;
-    const matchesYear = filterYear === "all" || claim.year === filterYear;
-    const matchesStudyCenter = 
-      role !== "registry" || 
-      filterStudyCenter === "all" || 
-      claim.studyCenter === filterStudyCenter;
-    
-    return matchesSearch && matchesStatus && matchesMonth && matchesYear && matchesStudyCenter;
-  });
-
-  return (
-    <div ref={ref} className="p-6 print:p-0">
-      <div className="print:hidden">
-        <h1 className="text-2xl font-bold mb-2">Teaching Claims Report</h1>
-        <p className="text-gray-600 mb-6">Generated on {new Date().toLocaleDateString()}</p>
-      </div>
-
-      {/* Header with University Logo for print */}
-      <div className="hidden print:flex justify-between items-center mb-6 border-b pb-4">
-        <div className="flex items-center gap-3">
-          <img
-            src="/uew-logo.png" 
-            alt="UEW Logo"
-            className="h-16 w-auto"
-          />
-          <div>
-            <h2 className="text-xl font-bold">University of Education, Winneba</h2>
-            <p className="text-sm">Teaching Claims Management System</p>
-          </div>
-        </div>
-        <div className="text-right">
-          <p className="text-sm">Generated: {new Date().toLocaleString()}</p>
-          <p className="text-sm">Role: {role.charAt(0).toUpperCase() + role.slice(1)}</p>
-        </div>
-      </div>
-
-      {/* Filters summary */}
-      <div className="mb-6 hidden print:block">
-        <h3 className="font-semibold mb-2">Report Filters:</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
-          <p><span className="font-medium">Status:</span> {filterStatus === "all" ? "All" : filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)}</p>
-          <p><span className="font-medium">Month:</span> {filterMonth === "all" ? "All" : filterMonth}</p>
-          <p><span className="font-medium">Year:</span> {filterYear === "all" ? "All" : filterYear}</p>
-          {role === "registry" && (
-            <p><span className="font-medium">Study Center:</span> {filterStudyCenter === "all" ? "All" : filterStudyCenter}</p>
-          )}
-        </div>
-      </div>
-
-      {/* Summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 hidden print:grid">
-        <div className="border rounded-lg p-4 bg-blue-50">
-          <h3 className="text-sm font-medium text-blue-600">Pending Approval</h3>
-          <p className="text-2xl font-bold">{claims.filter(c => c.status === "pending").length}</p>
-        </div>
-        <div className="border rounded-lg p-4 bg-green-50">
-          <h3 className="text-sm font-medium text-green-600">Approved Claims</h3>
-          <p className="text-2xl font-bold">{claims.filter(c => c.status === "approved").length}</p>
-        </div>
-        <div className="border rounded-lg p-4 bg-red-50">
-          <h3 className="text-sm font-medium text-red-600">Rejected Claims</h3>
-          <p className="text-2xl font-bold">{claims.filter(c => c.status === "rejected").length}</p>
-        </div>
-      </div>
-
-      {/* Claims table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full border-collapse">
-          <thead>
-            <tr className="border-b">
-              <th className="text-left py-2 px-1">Serial No.</th>
-              {role === "registry" && <th className="text-left py-2 px-1">Study Center</th>}
-              <th className="text-left py-2 px-1">Claim ID</th>
-              <th className="text-left py-2 px-1">Month/Year</th>
-              <th className="text-left py-2 px-1">Date</th>
-              <th className="text-left py-2 px-1">Course Code</th>
-              <th className="text-left py-2 px-1">Course Title</th>
-              <th className="text-left py-2 px-1">Time</th>
-              <th className="text-left py-2 px-1">Hours</th>
-              <th className="text-left py-2 px-1">Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredClaims.map((claim) => (
-              <tr key={claim.id} className="border-b">
-                <td className="py-2 px-1">{claim.serialNumber}</td>
-                {role === "registry" && <td className="py-2 px-1">{claim.studyCenter}</td>}
-                <td className="py-2 px-1">{claim.id}</td>
-                <td className="py-2 px-1">{claim.month} {claim.year}</td>
-                <td className="py-2 px-1">
-                  {new Date(claim.date).toLocaleDateString('en-GB', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric'
-                  })}
-                </td>
-                <td className="py-2 px-1">{claim.courseCode}</td>
-                <td className="py-2 px-1">{claim.courseTitle}</td>
-                <td className="py-2 px-1">{claim.startTime} - {claim.endTime}</td>
-                <td className="py-2 px-1">{claim.hours} hrs</td>
-                <td className="py-2 px-1">
-                  <span className={`inline-block px-2 py-1 rounded text-xs ${
-                    claim.status === "approved" 
-                      ? "bg-green-100 text-green-800" 
-                      : claim.status === "rejected" 
-                        ? "bg-red-100 text-red-800" 
-                        : "bg-yellow-100 text-yellow-800"
-                  }`}>
-                    {claim.status.charAt(0).toUpperCase() + claim.status.slice(1)}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Footer for print */}
-      <div className="hidden print:block mt-8 pt-4 border-t text-sm text-gray-500">
-        <p>University of Education, Winneba - Teaching Claims Management System</p>
-        <p>This report was generated automatically on {new Date().toLocaleString()}</p>
-      </div>
-    </div>
-  );
-});
-
-PrintableContent.displayName = 'PrintableContent';
-
 // Approvals Page Component
 const ApprovalsPage = () => {
   const [role, setRole] = useState<UserRole>("coordinator");
@@ -414,7 +260,6 @@ const ApprovalsPage = () => {
   const [filterYear, setFilterYear] = useState<string>("all");
   const [filterStudyCenter, setFilterStudyCenter] = useState<string>("all");
   const [claims, setClaims] = useState<TeachingClaim[]>([]);
-  const printRef = useRef<HTMLDivElement>(null);
 
   const studyCenters = [
     "Accra Main Campus", 
@@ -429,23 +274,6 @@ const ApprovalsPage = () => {
   ];
 
   const years = ["2023", "2022", "2021"];
-
-  // Print handler
-  const handlePrint = useReactToPrint({
-    content: () => printRef.current,
-    pageStyle: `
-      @page {
-        size: A4 landscape;
-        margin: 10mm;
-      }
-      @media print {
-        body {
-          -webkit-print-color-adjust: exact;
-        }
-      }
-    `,
-    documentTitle: `UEW_Teaching_Claims_Report_${new Date().toISOString().slice(0, 10)}`
-  });
 
   useEffect(() => {
     const handleResize = () => {
@@ -637,17 +465,6 @@ const ApprovalsPage = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-          <Button 
-              variant="outline" 
-              onClick={(e) => {
-                e.preventDefault();  // Prevent default button behavior
-                handlePrint();       // Call the print function
-              }}
-              className="flex items-center gap-2"
-            >
-              <Printer className="w-4 h-4" />
-              <span className="hidden sm:inline">Print Report</span>
-            </Button>
             <Badge variant="outline" className="bg-blue-50 text-blue-600 border-blue-200">
               <div className="h-2 w-2 rounded-full bg-blue-500 mr-2"></div>
               {filteredClaims.length} {filteredClaims.length === 1 ? "Claim" : "Claims"}
@@ -656,20 +473,6 @@ const ApprovalsPage = () => {
         </div>
         
         <Separator className="my-6" />
-        
-        {/* Hidden printable content */}
-        <div className="hidden">
-          <PrintableContent 
-            ref={printRef}
-            claims={filteredClaims}
-            role={role}
-            searchTerm={searchTerm}
-            filterStatus={filterStatus}
-            filterMonth={filterMonth}
-            filterYear={filterYear}
-            filterStudyCenter={filterStudyCenter}
-          />
-        </div>
         
         <div className="grid grid-cols-1 gap-6 mb-8">
           <Card>
