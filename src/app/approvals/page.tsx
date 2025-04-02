@@ -1,6 +1,6 @@
 "use client"
 
-import { FileText, CheckCircle, XCircle, Search, Filter, Menu, LayoutDashboard, User, ChevronDown, X, Users } from "lucide-react";
+import { FileText, CheckCircle, XCircle, Search, Filter, Menu, LayoutDashboard, User, ChevronDown, X, Users, Clock, Calendar, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
@@ -20,16 +20,25 @@ import Image from "next/image";
 
 type UserRole = 'lecturer' | 'coordinator' | 'registry';
 type ClaimStatus = 'pending' | 'approved' | 'rejected';
+type AssignedStatus = 'assigned' | 'unassigned' | 'completed';
 
-interface Claim {
+interface TeachingClaim {
   id: string;
+  serialNumber: string;
+  studyCenter: string;
   lecturer: string;
   department: string;
-  claimType: string;
-  amount: number;
-  dateSubmitted: string;
+  month: string;
+  year: string;
+  date: string;
+  courseCode: string;
+  courseTitle: string;
+  startTime: string;
+  endTime: string;
+  hours: number;
+  assignedStatus: AssignedStatus;
+  remarks: string;
   status: ClaimStatus;
-  documents: number;
 }
 
 // Sidebar Component
@@ -72,7 +81,7 @@ const Sidebar = ({ role, setRole, isOpen, setIsOpen }: {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -300, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed inset-y-0 left-0 bg-uew-blue text-white p-6 w-72 h-screen z-50 shadow-2xl flex flex-col justify-between md:hidden"
+            className="fixed inset-y-0 left-0 bg-blue-600 text-white p-6 w-72 h-screen z-50 shadow-2xl flex flex-col justify-between md:hidden"
           >
             <div>
               <div className="flex justify-between items-center mb-8">
@@ -103,10 +112,10 @@ const Sidebar = ({ role, setRole, isOpen, setIsOpen }: {
                   <Link 
                     key={label} 
                     href={href}
-                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-uew-dark-blue transition-colors"
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-700 transition-colors"
                     onClick={() => setIsOpen(false)}
                   >
-                    <Icon className="w-5 h-5 text-uew-gold" />
+                    <Icon className="w-5 h-5 text-yellow-400" />
                     <span className="text-sm font-medium">{label}</span>
                   </Link>
                 ))}
@@ -114,9 +123,9 @@ const Sidebar = ({ role, setRole, isOpen, setIsOpen }: {
             </div>
             
             <div className="mb-6">
-              <div className="flex items-center gap-3 mb-4 p-3 bg-uew-dark-blue rounded-lg">
-                <div className="p-2 rounded-full bg-uew-gold">
-                  <User className="w-4 h-4 text-uew-blue" />
+              <div className="flex items-center gap-3 mb-4 p-3 bg-blue-700 rounded-lg">
+                <div className="p-2 rounded-full bg-yellow-400">
+                  <User className="w-4 h-4 text-blue-600" />
                 </div>
                 <div>
                   <p className="text-sm font-medium">Current Role</p>
@@ -131,12 +140,12 @@ const Sidebar = ({ role, setRole, isOpen, setIsOpen }: {
                         </div>
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-48 bg-uew-blue border-uew-dark-blue">
+                    <DropdownMenuContent className="w-48 bg-blue-600 border-blue-700">
                       {(['lecturer', 'coordinator', 'registry'] as UserRole[]).map((r) => (
                         <DropdownMenuItem 
                           key={r} 
                           onClick={() => setRole(r)}
-                          className={`flex items-center gap-2 ${role === r ? 'bg-uew-dark-blue' : 'hover:bg-uew-dark-blue'}`}
+                          className={`flex items-center gap-2 ${role === r ? 'bg-blue-700' : 'hover:bg-blue-700'}`}
                         >
                           <User className="w-4 h-4" />
                           {r.charAt(0).toUpperCase() + r.slice(1)}
@@ -147,8 +156,8 @@ const Sidebar = ({ role, setRole, isOpen, setIsOpen }: {
                 </div>
               </div>
               
-              <div className="p-3 bg-uew-dark-blue rounded-lg">
-                <p className="text-xs text-uew-gold mb-1">System Status</p>
+              <div className="p-3 bg-blue-700 rounded-lg">
+                <p className="text-xs text-yellow-400 mb-1">System Status</p>
                 <div className="flex items-center gap-2">
                   <div className="h-2 w-2 rounded-full bg-green-500"></div>
                   <span className="text-sm">All systems operational</span>
@@ -160,7 +169,7 @@ const Sidebar = ({ role, setRole, isOpen, setIsOpen }: {
       </AnimatePresence>
 
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex w-72 bg-uew-blue text-white p-6 h-screen flex-col justify-between sticky top-0">
+      <div className="hidden md:flex w-72 bg-blue-600 text-white p-6 h-screen flex-col justify-between sticky top-0">
         <div>
           <div className="flex items-center gap-3 mb-8">
             <Image 
@@ -182,11 +191,11 @@ const Sidebar = ({ role, setRole, isOpen, setIsOpen }: {
                 href={href}
                 className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
                   typeof window !== 'undefined' && window.location.pathname === href
-                    ? 'bg-uew-dark-blue'
-                    : 'hover:bg-uew-dark-blue'
+                    ? 'bg-blue-700'
+                    : 'hover:bg-blue-700'
                 }`}
               >
-                <Icon className="w-5 h-5 text-uew-gold" />
+                <Icon className="w-5 h-5 text-yellow-400" />
                 <span className="text-sm font-medium">{label}</span>
               </Link>
             ))}
@@ -194,9 +203,9 @@ const Sidebar = ({ role, setRole, isOpen, setIsOpen }: {
         </div>
         
         <div className="mb-6">
-          <div className="flex items-center gap-3 mb-4 p-3 bg-uew-dark-blue rounded-lg">
-            <div className="p-2 rounded-full bg-uew-gold">
-              <User className="w-4 h-4 text-uew-blue" />
+          <div className="flex items-center gap-3 mb-4 p-3 bg-blue-700 rounded-lg">
+            <div className="p-2 rounded-full bg-yellow-400">
+              <User className="w-4 h-4 text-blue-600" />
             </div>
             <div>
               <p className="text-sm font-medium">Current Role</p>
@@ -211,12 +220,12 @@ const Sidebar = ({ role, setRole, isOpen, setIsOpen }: {
                     </div>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-48 bg-uew-blue border-uew-dark-blue">
+                <DropdownMenuContent className="w-48 bg-blue-600 border-blue-700">
                   {(['lecturer', 'coordinator', 'registry'] as UserRole[]).map((r) => (
                     <DropdownMenuItem 
                       key={r} 
                       onClick={() => setRole(r)}
-                      className={`flex items-center gap-2 ${role === r ? 'bg-uew-dark-blue' : 'hover:bg-uew-dark-blue'}`}
+                      className={`flex items-center gap-2 ${role === r ? 'bg-blue-700' : 'hover:bg-blue-700'}`}
                     >
                       <User className="w-4 h-4" />
                       {r.charAt(0).toUpperCase() + r.slice(1)}
@@ -227,8 +236,8 @@ const Sidebar = ({ role, setRole, isOpen, setIsOpen }: {
             </div>
           </div>
           
-          <div className="p-3 bg-uew-dark-blue rounded-lg">
-            <p className="text-xs text-uew-gold mb-1">System Status</p>
+          <div className="p-3 bg-blue-700 rounded-lg">
+            <p className="text-xs text-yellow-400 mb-1">System Status</p>
             <div className="flex items-center gap-2">
               <div className="h-2 w-2 rounded-full bg-green-500"></div>
               <span className="text-sm">All systems operational</span>
@@ -247,7 +256,24 @@ const ApprovalsPage = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<ClaimStatus | "all">("all");
-  const [claims, setClaims] = useState<Claim[]>([]);
+  const [filterMonth, setFilterMonth] = useState<string>("all");
+  const [filterYear, setFilterYear] = useState<string>("all");
+  const [filterStudyCenter, setFilterStudyCenter] = useState<string>("all");
+  const [claims, setClaims] = useState<TeachingClaim[]>([]);
+
+  const studyCenters = [
+    "Accra Main Campus", 
+    "Kumasi Campus", 
+    "Mampong Campus", 
+    "Winneba Campus"
+  ];
+
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const years = ["2023", "2022", "2021"];
 
   useEffect(() => {
     const handleResize = () => {
@@ -261,58 +287,98 @@ const ApprovalsPage = () => {
   }, []);
 
   useEffect(() => {
-    // Simulate API fetch
+    // Simulate API fetch with teaching claims data
     const fetchClaims = () => {
-      const mockClaims: Claim[] = [
+      const mockClaims: TeachingClaim[] = [
         {
-          id: "CLM-2023-001",
+          id: "TCL-2023-001",
+          serialNumber: "SN001",
+          studyCenter: "Accra Main Campus",
           lecturer: "Dr. Kwame Mensah",
           department: "Computer Science",
-          claimType: "Research Grant",
-          amount: 2500,
-          dateSubmitted: "2023-10-15",
-          status: "pending",
-          documents: 3
+          month: "October",
+          year: "2023",
+          date: "2023-10-15",
+          courseCode: "CS101",
+          courseTitle: "Introduction to Programming",
+          startTime: "08:00",
+          endTime: "10:00",
+          hours: 2,
+          assignedStatus: "assigned",
+          remarks: "Regular teaching hours",
+          status: "pending"
         },
         {
-          id: "CLM-2023-002",
+          id: "TCL-2023-002",
+          serialNumber: "SN002",
+          studyCenter: "Kumasi Campus",
           lecturer: "Prof. Ama Boateng",
           department: "Mathematics",
-          claimType: "Conference Travel",
-          amount: 3200,
-          dateSubmitted: "2023-10-12",
-          status: "pending",
-          documents: 2
+          month: "October",
+          year: "2023",
+          date: "2023-10-12",
+          courseCode: "MATH202",
+          courseTitle: "Advanced Calculus",
+          startTime: "10:00",
+          endTime: "12:00",
+          hours: 2,
+          assignedStatus: "completed",
+          remarks: "Extra tutorial session",
+          status: "pending"
         },
         {
-          id: "CLM-2023-003",
+          id: "TCL-2023-003",
+          serialNumber: "SN003",
+          studyCenter: "Accra Main Campus",
           lecturer: "Dr. Yaw Asare",
           department: "Physics",
-          claimType: "Equipment Purchase",
-          amount: 4500,
-          dateSubmitted: "2023-10-10",
-          status: "approved",
-          documents: 4
+          month: "September",
+          year: "2023",
+          date: "2023-09-28",
+          courseCode: "PHY301",
+          courseTitle: "Quantum Mechanics",
+          startTime: "14:00",
+          endTime: "16:00",
+          hours: 2,
+          assignedStatus: "unassigned",
+          remarks: "Makeup class",
+          status: "approved"
         },
         {
-          id: "CLM-2023-004",
+          id: "TCL-2023-004",
+          serialNumber: "SN004",
+          studyCenter: "Mampong Campus",
           lecturer: "Dr. Efua Coleman",
           department: "Chemistry",
-          claimType: "Workshop Attendance",
-          amount: 1800,
-          dateSubmitted: "2023-10-08",
-          status: "rejected",
-          documents: 3
+          month: "September",
+          year: "2023",
+          date: "2023-09-20",
+          courseCode: "CHEM101",
+          courseTitle: "General Chemistry",
+          startTime: "09:00",
+          endTime: "11:00",
+          hours: 2,
+          assignedStatus: "completed",
+          remarks: "Practical session",
+          status: "rejected"
         },
         {
-          id: "CLM-2023-005",
+          id: "TCL-2023-005",
+          serialNumber: "SN005",
+          studyCenter: "Winneba Campus",
           lecturer: "Prof. Kofi Ansah",
           department: "Biology",
-          claimType: "Research Grant",
-          amount: 3000,
-          dateSubmitted: "2023-10-05",
-          status: "pending",
-          documents: 5
+          month: "August",
+          year: "2023",
+          date: "2023-08-15",
+          courseCode: "BIO201",
+          courseTitle: "Cell Biology",
+          startTime: "13:00",
+          endTime: "15:00",
+          hours: 2,
+          assignedStatus: "assigned",
+          remarks: "Guest lecture",
+          status: "pending"
         },
       ];
       setClaims(mockClaims);
@@ -321,16 +387,39 @@ const ApprovalsPage = () => {
     fetchClaims();
   }, []);
 
+  // Filter claims based on role, search term, status, month, year, and study center
   const filteredClaims = claims.filter(claim => {
+    // Filter by role - coordinators only see their study center
+    if (role === "coordinator") {
+      // In a real app, you would get the coordinator's study center from their profile
+      const coordinatorStudyCenter = "Accra Main Campus"; // Example
+      if (claim.studyCenter !== coordinatorStudyCenter) return false;
+    }
+    
+    // Filter by search term
     const matchesSearch = 
       claim.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      claim.serialNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       claim.lecturer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      claim.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      claim.claimType.toLowerCase().includes(searchTerm.toLowerCase());
+      claim.courseCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      claim.courseTitle.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesFilter = filterStatus === "all" || claim.status === filterStatus;
+    // Filter by status
+    const matchesStatus = filterStatus === "all" || claim.status === filterStatus;
     
-    return matchesSearch && matchesFilter;
+    // Filter by month
+    const matchesMonth = filterMonth === "all" || claim.month === filterMonth;
+    
+    // Filter by year
+    const matchesYear = filterYear === "all" || claim.year === filterYear;
+    
+    // Filter by study center (only for registry)
+    const matchesStudyCenter = 
+      role !== "registry" || 
+      filterStudyCenter === "all" || 
+      claim.studyCenter === filterStudyCenter;
+    
+    return matchesSearch && matchesStatus && matchesMonth && matchesYear && matchesStudyCenter;
   });
 
   const handleApprove = (claimId: string) => {
@@ -365,12 +454,12 @@ const ApprovalsPage = () => {
               )}
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
-                  Claims Approvals
+                  Teaching Claims Approvals
                 </h1>
                 <p className="text-sm text-gray-500">
                   {role === "coordinator" 
-                    ? "Department claims awaiting your review" 
-                    : "All claims requiring registry approval"}
+                    ? "Claims from your study center awaiting review" 
+                    : "All teaching claims requiring approval"}
                 </p>
               </div>
             </div>
@@ -389,7 +478,7 @@ const ApprovalsPage = () => {
           <Card>
             <CardHeader>
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <CardTitle>Claims Review</CardTitle>
+                <CardTitle>Teaching Claims Review</CardTitle>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -422,6 +511,62 @@ const ApprovalsPage = () => {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        {filterMonth === "all" ? "All Months" : filterMonth}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setFilterMonth("all")}>
+                        All Months
+                      </DropdownMenuItem>
+                      {months.map(month => (
+                        <DropdownMenuItem key={month} onClick={() => setFilterMonth(month)}>
+                          {month}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        {filterYear === "all" ? "All Years" : filterYear}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setFilterYear("all")}>
+                        All Years
+                      </DropdownMenuItem>
+                      {years.map(year => (
+                        <DropdownMenuItem key={year} onClick={() => setFilterYear(year)}>
+                          {year}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  {role === "registry" && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4" />
+                          {filterStudyCenter === "all" ? "All Centers" : filterStudyCenter}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setFilterStudyCenter("all")}>
+                          All Centers
+                        </DropdownMenuItem>
+                        {studyCenters.map(center => (
+                          <DropdownMenuItem key={center} onClick={() => setFilterStudyCenter(center)}>
+                            {center}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
               </div>
             </CardHeader>
@@ -429,12 +574,17 @@ const ApprovalsPage = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Serial No.</TableHead>
+                    {role === "registry" && <TableHead>Study Center</TableHead>}
                     <TableHead>Claim ID</TableHead>
-                    <TableHead>Lecturer</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Amount</TableHead>
+                    <TableHead>Month/Year</TableHead>
                     <TableHead>Date</TableHead>
+                    <TableHead>Course Code</TableHead>
+                    <TableHead>Course Title</TableHead>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Hours</TableHead>
+                    <TableHead>Assigned Status</TableHead>
+                    <TableHead>Remarks</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -443,18 +593,41 @@ const ApprovalsPage = () => {
                   {filteredClaims.length > 0 ? (
                     filteredClaims.map((claim) => (
                       <TableRow key={claim.id}>
-                        <TableCell className="font-medium">{claim.id}</TableCell>
-                        <TableCell>{claim.lecturer}</TableCell>
-                        <TableCell>{claim.department}</TableCell>
-                        <TableCell>{claim.claimType}</TableCell>
-                        <TableCell>₵{claim.amount.toLocaleString()}</TableCell>
+                        <TableCell className="font-medium">{claim.serialNumber}</TableCell>
+                        {role === "registry" && <TableCell>{claim.studyCenter}</TableCell>}
+                        <TableCell>{claim.id}</TableCell>
+                        <TableCell>{claim.month} {claim.year}</TableCell>
                         <TableCell>
-                          {new Date(claim.dateSubmitted).toLocaleDateString('en-GB', {
+                          {new Date(claim.date).toLocaleDateString('en-GB', {
                             day: '2-digit',
                             month: 'short',
                             year: 'numeric'
                           })}
                         </TableCell>
+                        <TableCell>{claim.courseCode}</TableCell>
+                        <TableCell>{claim.courseTitle}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-1">
+                            <Clock className="h-3 w-3 text-gray-500" />
+                            <span>{claim.startTime} - {claim.endTime}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{claim.hours} hrs</TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant="outline" 
+                            className={
+                              claim.assignedStatus === "assigned" 
+                                ? "bg-blue-50 text-blue-600 border-blue-200" 
+                                : claim.assignedStatus === "completed" 
+                                  ? "bg-green-50 text-green-600 border-green-200" 
+                                  : "bg-yellow-50 text-yellow-600 border-yellow-200"
+                            }
+                          >
+                            {claim.assignedStatus.charAt(0).toUpperCase() + claim.assignedStatus.slice(1)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="max-w-[150px] truncate">{claim.remarks}</TableCell>
                         <TableCell>
                           <Badge 
                             variant="outline" 
@@ -478,7 +651,7 @@ const ApprovalsPage = () => {
                               className="hover:bg-gray-100"
                             >
                               <Link href={`/claims/${claim.id}`}>
-                                <FileText className="h-4 w-4 text-uew-blue" />
+                                <FileText className="h-4 w-4 text-blue-600" />
                               </Link>
                             </Button>
                             {claim.status === "pending" && (
@@ -507,8 +680,8 @@ const ApprovalsPage = () => {
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={8} className="h-24 text-center">
-                        No claims found.
+                      <TableCell colSpan={role === "registry" ? 13 : 12} className="h-24 text-center">
+                        No claims found matching your criteria.
                       </TableCell>
                     </TableRow>
                   )}
@@ -568,28 +741,10 @@ const ApprovalsPage = () => {
         variant="ghost" 
         size="icon" 
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 z-40 md:hidden rounded-full w-12 h-12 bg-uew-blue text-white shadow-lg"
+        className="fixed bottom-4 right-4 z-40 md:hidden rounded-full w-12 h-12 bg-blue-600 text-white shadow-lg"
       >
         <Menu className="w-6 h-6" />
       </Button>
-
-      {/* UEW Color Variables */}
-      <style jsx global>{`
-        :root {
-          --uew-blue: #0056B3;
-          --uew-dark-blue: #003366;
-          --uew-light-blue: #E6F0FA;
-          --uew-gold: #FFD700;
-        }
-        .bg-uew-blue { background-color: var(--uew-blue); }
-        .bg-uew-dark-blue { background-color: var(--uew-dark-blue); }
-        .bg-uew-light-blue { background-color: var(--uew-light-blue); }
-        .bg-uew-gold { background-color: var(--uew-gold); }
-        .text-uew-blue { color: var(--uew-blue); }
-        .text-uew-dark-blue { color: var(--uew-dark-blue); }
-        .text-uew-gold { color: var(--uew-gold); }
-        .border-uew-blue { border-color: var(--uew-blue); }
-      `}</style>
     </div>
   );
 };
