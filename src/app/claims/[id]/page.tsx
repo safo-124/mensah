@@ -35,16 +35,7 @@ interface TeachingClaim {
   submittedDate: string;
 }
 
-interface PageProps {
-  params: {
-    id: string
-  }
-  searchParams?: {
-    [key: string]: string | string[] | undefined
-  }
-}
-
-const ClaimDetailsPage = ({ params }: PageProps) => {
+const ClaimDetailsPage = ({ params }: { params: { id: string } }) => {
   const router = useRouter();
   const printRef = useRef<HTMLDivElement>(null);
 
