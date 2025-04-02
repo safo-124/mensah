@@ -39,9 +39,12 @@ const ClaimDetailsPage = ({ params }: { params: { id: string } }) => {
   const router = useRouter();
   const printRef = useRef<HTMLDivElement>(null);
 
+  // Properly access the id from params
+  const claimId = params.id;
+
   // In a real app, you would fetch this data based on the ID from your API
   const claim: TeachingClaim = {
-    id: params.id,
+    id: claimId,
     serialNumber: "SN001",
     studyCenter: "Accra Main Campus",
     lecturer: "Dr. Kwame Mensah",
