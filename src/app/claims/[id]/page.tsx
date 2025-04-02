@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react";
+import React, { use } from "react";
 import { CheckCircle, XCircle, Clock, Calendar, MapPin, ChevronLeft, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,16 +35,16 @@ interface TeachingClaim {
   submittedDate: string;
 }
 
-const ClaimDetailsPage = ({ params }: { params: { id: string } }) => {
+const ClaimDetailsPage = ({ params }: { params: Promise<{ id: string }> }) => {
   const router = useRouter();
   const printRef = useRef<HTMLDivElement>(null);
+  
+  // Properly await the params promise using React.use()
+  const { id } = use(params); // This replaces the direct params.id access
 
-  // Properly access the id from params
-  const claimId = params.id;
-
-  // In a real app, you would fetch this data based on the ID from your API
+  // Mock data - replace with actual data fetching
   const claim: TeachingClaim = {
-    id: claimId,
+    id,
     serialNumber: "SN001",
     studyCenter: "Accra Main Campus",
     lecturer: "Dr. Kwame Mensah",
@@ -65,17 +65,6 @@ const ClaimDetailsPage = ({ params }: { params: { id: string } }) => {
     submittedDate: "2023-10-16T09:30:00Z"
   };
 
-  const handleApprove = () => {
-    // In a real app, you would make an API call here
-    console.log(`Claim ${claim.id} approved`);
-    router.push("/approvals");
-  };
-
-  const handleReject = () => {
-    // In a real app, you would make an API call here
-    console.log(`Claim ${claim.id} rejected`);
-    router.push("/approvals");
-  };
 
   return (
     <div className="container mx-auto p-4 md:p-6">
@@ -255,7 +244,7 @@ const ClaimDetailsPage = ({ params }: { params: { id: string } }) => {
                         <Button 
                           variant="outline" 
                           className="bg-green-50 text-green-600 hover:bg-green-100"
-                          onClick={handleApprove}
+                          
                         >
                           <CheckCircle className="h-4 w-4 mr-2" />
                           Approve Claim
@@ -263,7 +252,7 @@ const ClaimDetailsPage = ({ params }: { params: { id: string } }) => {
                         <Button 
                           variant="outline" 
                           className="bg-red-50 text-red-600 hover:bg-red-100"
-                          onClick={handleReject}
+                          
                         >
                           <XCircle className="h-4 w-4 mr-2" />
                           Reject Claim
