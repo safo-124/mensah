@@ -295,7 +295,7 @@ const PrintableContent = React.forwardRef<HTMLDivElement, {
       {/* Header with University Logo for print */}
       <div className="hidden print:flex justify-between items-center mb-6 border-b pb-4">
         <div className="flex items-center gap-3">
-          <img 
+          <img
             src="/uew-logo.png" 
             alt="UEW Logo"
             className="h-16 w-auto"
@@ -637,9 +637,12 @@ const ApprovalsPage = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button 
+          <Button 
               variant="outline" 
-              onClick={handlePrint}
+              onClick={(e) => {
+                e.preventDefault();  // Prevent default button behavior
+                handlePrint();       // Call the print function
+              }}
               className="flex items-center gap-2"
             >
               <Printer className="w-4 h-4" />
