@@ -1,6 +1,6 @@
-"use client"
+/**"use client"
 
-import { User, Mail, Phone, GraduationCap, MapPin, Briefcase, ArrowLeft, CheckCircle} from "lucide-react";
+import { User, Mail, Phone, GraduationCap, MapPin, Briefcase, ArrowLeft, CheckCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,14 @@ import { useActionState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Separator } from "@/components/ui/separator";
 
-type UserRole = 'registry' | 'coordinator';
+// Define roles as constants for better type safety
+const Roles = {
+  REGISTRY: 'registry',
+  COORDINATOR: 'coordinator'
+} as const;
+
+type UserRole = typeof Roles[keyof typeof Roles];
+
 type FormState = {
   success: boolean;
   message: string;
@@ -26,14 +33,14 @@ const departments = [
   "English",
   "History",
   "Economics"
-];
+] as const;
 
 const studyCenters = [
   "Accra Main Campus",
   "Kumasi Campus",
   "Mampong Campus",
   "Winneba Campus"
-];
+] as const;
 
 export default function CreateLecturerPage() {
   const [state, formAction, isPending] = useActionState<FormState, FormData>(
@@ -74,9 +81,9 @@ export default function CreateLecturerPage() {
     }
   }, [state]);
 
-  // In a real app, you would get the user's role and study center from auth context
-  const currentUserRole: UserRole = "coordinator"; // or "registry"
-  const coordinatorStudyCenter = "Accra Main Campus"; // Only relevant for coordinators
+  // Get user's role from auth context in a real app
+  const currentUserRole: UserRole = Roles.COORDINATOR;
+  const coordinatorStudyCenter = "Accra Main Campus";
 
   return (
     <motion.div 
@@ -107,7 +114,7 @@ export default function CreateLecturerPage() {
         >
           <User className="h-8 w-8 text-blue-600" />
           <h1 className="text-3xl font-bold text-gray-800">
-            {currentUserRole === "registry" ? "Create New Lecturer" : "Add Lecturer to Your Center"}
+            {currentUserRole === Roles.REGISTRY ? "Create New Lecturer" : "Add Lecturer to Your Center"}
           </h1>
         </motion.div>
         
@@ -233,7 +240,7 @@ export default function CreateLecturerPage() {
                         <MapPin className="h-4 w-4" />
                         Study Center
                       </Label>
-                      {currentUserRole === "registry" ? (
+                      {currentUserRole === Roles.REGISTRY ? (
                         <Select name="studyCenter" required>
                           <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
                             <SelectValue placeholder="Select study center" />
@@ -312,4 +319,4 @@ export default function CreateLecturerPage() {
       </div>
     </motion.div>
   );
-}
+}*/
