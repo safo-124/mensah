@@ -218,7 +218,7 @@ const DashboardPage = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const getCoordinatorCenterCount = () => {
+  /*const getCoordinatorCenterCount = () => {
     // In a real app, you would get the coordinator's assigned center from their profile
     const coordinatorCenter = "accra"; // Example: Accra is the assigned center
     switch (coordinatorCenter) {
@@ -228,7 +228,7 @@ const DashboardPage = () => {
       case "winneba": return staffCounts.winnebaLecturers;
       default: return 0;
     }
-  };
+  };*/
 
   const stats = [
     { title: "Total Claims", value: "120", icon: FileText, trend: "↑ 12%", positive: true },
@@ -244,7 +244,7 @@ const DashboardPage = () => {
           { title: "Total Lecturers", value: staffCounts.lecturers, icon: Users, trend: "", positive: true }
         ]
       : role === "coordinator"
-        ? [{ title: "Lecturers in Center", value: getCoordinatorCenterCount(), icon: Users, trend: "", positive: true }]
+        ? [{ title: "Lecturers in Center", /*value: getCoordinatorCenterCount(),*/ icon: Users, trend: "", positive: true }]
         : [])
   ];
 
