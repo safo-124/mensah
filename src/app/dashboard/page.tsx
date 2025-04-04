@@ -1,6 +1,6 @@
 "use client"
 
-import { LayoutDashboard, FileText, CheckCircle, User, ChevronDown, Menu, X, Clock, AlertCircle, DollarSign, Users, PlusCircle } from "lucide-react";
+import { LayoutDashboard, FileText, CheckCircle, User, ChevronDown, Menu, X, Clock, AlertCircle, Users, PlusCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
@@ -218,25 +218,12 @@ const DashboardPage = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  /*const getCoordinatorCenterCount = () => {
-    // In a real app, you would get the coordinator's assigned center from their profile
-    const coordinatorCenter = "accra"; // Example: Accra is the assigned center
-    switch (coordinatorCenter) {
-      case "accra": return staffCounts.accraLecturers;
-      case "kumasi": return staffCounts.kumasiLecturers;
-      case "mampong": return staffCounts.mampongLecturers;
-      case "winneba": return staffCounts.winnebaLecturers;
-      default: return 0;
-    }
-  };*/
-
   const stats = [
     { title: "Total Claims", value: "120", icon: FileText, trend: "↑ 12%", positive: true },
     ...(role !== "lecturer" 
       ? [{ title: "Pending Approvals", value: "15", icon: Clock, trend: "↓ 3%", positive: false }] 
       : []),
     { title: "Approved Claims", value: "90", icon: CheckCircle, trend: "↑ 8%", positive: true },
-    { title: "Total Amount", value: "₵12,450", icon: DollarSign, trend: "↑ 15%", positive: true },
     ...(role === "registry" 
       ? [ 
           { title: "Rejected Claims", value: "5", icon: AlertCircle, trend: "↓ 2%", positive: false },
@@ -244,7 +231,7 @@ const DashboardPage = () => {
           { title: "Total Lecturers", value: staffCounts.lecturers, icon: Users, trend: "", positive: true }
         ]
       : role === "coordinator"
-        ? [{ title: "Lecturers in Center", /*value: getCoordinatorCenterCount(),*/ icon: Users, trend: "", positive: true }]
+        ? [{ title: "Lecturers in Center", value: "35", icon: Users, trend: "", positive: true }]
         : [])
   ];
 
@@ -517,11 +504,6 @@ const DashboardPage = () => {
                     </Link>
                   </Button>
                 )}
-                
-                <Button variant="outline" className="w-full">
-                  <DollarSign className="w-4 h-4 mr-2" />
-                  View Payment History
-                </Button>
               </CardContent>
             </Card>
           </motion.div>
