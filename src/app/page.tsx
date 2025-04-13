@@ -9,11 +9,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import Image from "next/image";
 
-const UEWLandingPage = () => {
+const CODeLLandingPage = () => {
   const [role, setRole] = useState("lecturer");
   const [isHovered, setIsHovered] = useState(false);
 
-  // UEW-specific features with appropriate icons
+  // CODeL-specific features with appropriate icons
   const features = [
     {
       title: "Expense Claims",
@@ -27,7 +27,7 @@ const UEWLandingPage = () => {
       color: "text-green-600"
     },
     {
-      title: "Payment Tracking",
+      title: "Form Tracking System",
       description: "Monitor claim status through to payment",
       icon: ClipboardList,
       color: "text-yellow-600"
@@ -36,21 +36,21 @@ const UEWLandingPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      {/* University Header with Logo */}
+      {/* College Header with Logo */}
       <header className="bg-blue-800 text-white py-4 px-6 shadow-md">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="bg-white p-2 rounded-full">
               <Image 
-                src="/uew-logo.png" 
-                alt="UEW Logo"
+                src="/codellogo.png" 
+                alt="CODeL Logo"
                 width={40}
                 height={40}
                 className="h-10 w-auto"
               />
             </div>
             <div>
-              <h1 className="text-xl font-bold">University of Education, Winneba</h1>
+              <h1 className="text-xl font-bold">College of Distance and e-Learning</h1>
               <p className="text-sm opacity-90">Staff Claims Portal</p>
             </div>
           </div>
@@ -66,7 +66,7 @@ const UEWLandingPage = () => {
           className="text-center mb-16"
         >
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            UEW <span className="text-blue-800">Claims Management</span> System
+            CODeL <span className="text-blue-800">Claims Submission</span> System
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
             Submit, track, and manage your expense claims with our dedicated portal
@@ -170,7 +170,7 @@ const UEWLandingPage = () => {
           </Card>
         </motion.div>
 
-        {/* Footer with University Branding */}
+        {/* Footer with College Branding */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -179,13 +179,13 @@ const UEWLandingPage = () => {
         >
           <div className="flex flex-col items-center gap-4 mb-4">
             <Image 
-              src="/uew-logo.png" 
-              alt="UEW Logo"
+              src="/codellogo.png" 
+              alt="CODeL Logo"
               width={120}
               height={120}
               className="h-12 w-auto"
             />
-            <p>© {new Date().getFullYear()} University of Education, Winneba</p>
+            <p>© {new Date().getFullYear()} College of Distance and e-Learning</p>
           </div>
           <p className="text-xs text-gray-500">
             For technical support, contact: ICT Directorate | Ext: 1234
@@ -196,4 +196,4 @@ const UEWLandingPage = () => {
   );
 };
 
-export default UEWLandingPage;
+export default CODeLLandingPage;

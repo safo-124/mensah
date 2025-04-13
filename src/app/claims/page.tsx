@@ -2,7 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, FileText, Car, BookOpen, GraduationCap, Clock, Calendar, MapPin, Hash, User, Book, Award } from "lucide-react";
+import { ArrowLeft, FileText, Car, BookOpen, GraduationCap, Clock, Calendar, MapPin, Hash, User, Book, Award, Users, File } from "lucide-react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,18 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-type ClaimType = "transportation" | "teaching" | "thesis";
-
-type TransportationClaim = {
-  claimType: "transportation";
-  transportMode: "public" | "private";
-  registrationNumber?: string;
-  cubicCapacity?: string;
-  destinationFrom: string;
-  destinationTo: string;
-  date: string;
-  distance: string;
-};
+type ClaimType = "teaching" | "thesis";
 
 type TeachingClaim = {
   claimType: "teaching";
@@ -31,20 +20,29 @@ type TeachingClaim = {
   contactHours: string;
   startTime: string;
   endTime: string;
+  isTransportation: boolean;
+  transportMode?: "public" | "private";
+  registrationNumber?: string;
+  cubicCapacity?: string;
+  from?: string;
+  to?: string;
+  distance?: string;
 };
 
 type ThesisClaim = {
   claimType: "thesis";
   thesisType: "supervision" | "examination";
   degree: "PhD" | "MPhil" | "MA" | "Ed" | "PGDE";
-  studentNumber: string;
-  studentName: string;
-  thesisTitle: string;
+  courseCode: string;
+  date: string;
+  studentNumbers: string[];
+  studentNames: string[];
+  thesisTitles: string[];
 };
 
 type ClaimData = {
   claimId: string;
-} & (TransportationClaim | TeachingClaim | ThesisClaim);
+} & (TeachingClaim | ThesisClaim);
 
 type FormState = {
   success: boolean;
@@ -56,7 +54,11 @@ const transportModes = ["public", "private"] as const;
 const thesisTypes = ["supervision", "examination"] as const;
 
 export default function ClaimsPage() {
-  const [claimType, setClaimType] = useState<ClaimType>("transportation");
+  const [claimType, setClaimType] = useState<ClaimType>("teaching");
+  const [studentCount, setStudentCount] = useState(1);
+  const [isTransportation, setIsTransportation] = useState(false);
+  const [thesisType, setThesisType] = useState<"supervision" | "examination">("supervision");
+
   const [state, formAction, isPending] = useActionState<FormState, FormData>(
     async (prevState: FormState, formData: FormData) => {
       try {
@@ -67,19 +69,7 @@ export default function ClaimsPage() {
 
         let claimData: ClaimData;
 
-        if (baseData.claimType === "transportation") {
-          claimData = {
-            ...baseData,
-            claimType: "transportation",
-            transportMode: formData.get("transportMode") as "public" | "private",
-            registrationNumber: formData.get("registrationNumber") as string,
-            cubicCapacity: formData.get("cubicCapacity") as string,
-            destinationFrom: formData.get("destinationFrom") as string,
-            destinationTo: formData.get("destinationTo") as string,
-            date: formData.get("date") as string,
-            distance: formData.get("distance") as string,
-          };
-        } else if (baseData.claimType === "teaching") {
+        if (baseData.claimType === "teaching") {
           claimData = {
             ...baseData,
             claimType: "teaching",
@@ -88,16 +78,38 @@ export default function ClaimsPage() {
             contactHours: formData.get("contactHours") as string,
             startTime: formData.get("startTime") as string,
             endTime: formData.get("endTime") as string,
+            isTransportation: formData.get("isTransportation") === "on",
+            transportMode: formData.get("transportMode") as "public" | "private" | undefined,
+            registrationNumber: formData.get("registrationNumber") as string | undefined,
+            cubicCapacity: formData.get("cubicCapacity") as string | undefined,
+            from: formData.get("from") as string | undefined,
+            to: formData.get("to") as string | undefined,
+            distance: formData.get("distance") as string | undefined,
           };
         } else {
+          const studentNumbers = [];
+          const studentNames = [];
+          const thesisTitles = [];
+          
+          const currentThesisType = formData.get("thesisType") as "supervision" | "examination";
+          const count = currentThesisType === "supervision" ? studentCount : 1;
+          
+          for (let i = 0; i < count; i++) {
+            studentNumbers.push(formData.get(`studentNumber-${i}`) as string);
+            studentNames.push(formData.get(`studentName-${i}`) as string);
+            thesisTitles.push(formData.get(`thesisTitle-${i}`) as string);
+          }
+          
           claimData = {
             ...baseData,
             claimType: "thesis",
-            thesisType: formData.get("thesisType") as "supervision" | "examination",
+            thesisType: currentThesisType,
             degree: formData.get("degree") as "PhD" | "MPhil" | "MA" | "Ed" | "PGDE",
-            studentNumber: formData.get("studentNumber") as string,
-            studentName: formData.get("studentName") as string,
-            thesisTitle: formData.get("thesisTitle") as string,
+            courseCode: formData.get("courseCode") as string,
+            date: formData.get("date") as string,
+            studentNumbers,
+            studentNames,
+            thesisTitles,
           };
         }
 
@@ -124,6 +136,25 @@ export default function ClaimsPage() {
       alert(state.message);
     }
   }, [state]);
+
+  const addStudentField = () => {
+    if (thesisType === "supervision" && studentCount < 10) {
+      setStudentCount(studentCount + 1);
+    }
+  };
+
+  const removeStudentField = () => {
+    if (studentCount > 1) {
+      setStudentCount(studentCount - 1);
+    }
+  };
+
+  const handleThesisTypeChange = (value: "supervision" | "examination") => {
+    setThesisType(value);
+    if (value === "examination") {
+      setStudentCount(1);
+    }
+  };
 
   return (
     <motion.div 
@@ -174,7 +205,6 @@ export default function ClaimsPage() {
             <CardContent className="p-6">
               <form action={formAction} className="space-y-6">
                 <div className="space-y-4">
-                  {/* Claim ID */}
                   <motion.div whileHover={{ scale: 1.01 }}>
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-gray-700">
@@ -184,13 +214,14 @@ export default function ClaimsPage() {
                       <Input 
                         name="claimId" 
                         required 
+                        type="text"
+                        title="Enter a unique claim identifier"
                         placeholder="CL-2023-001"
                         className="focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
                   </motion.div>
 
-                  {/* Claim Type Selection */}
                   <motion.div whileHover={{ scale: 1.01 }}>
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2 text-gray-700">
@@ -201,18 +232,12 @@ export default function ClaimsPage() {
                         name="claimType" 
                         required 
                         onValueChange={(value: ClaimType) => setClaimType(value)}
-                        defaultValue="transportation"
+                        defaultValue="teaching"
                       >
                         <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
                           <SelectValue placeholder="Select claim type" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="transportation">
-                            <div className="flex items-center gap-2">
-                              <Car className="h-4 w-4" />
-                              Transportation Claim
-                            </div>
-                          </SelectItem>
                           <SelectItem value="teaching">
                             <div className="flex items-center gap-2">
                               <BookOpen className="h-4 w-4" />
@@ -222,7 +247,7 @@ export default function ClaimsPage() {
                           <SelectItem value="thesis">
                             <div className="flex items-center gap-2">
                               <GraduationCap className="h-4 w-4" />
-                              Thesis Claim
+                              Thesis/Project Claim
                             </div>
                           </SelectItem>
                         </SelectContent>
@@ -230,183 +255,209 @@ export default function ClaimsPage() {
                     </div>
                   </motion.div>
 
-                  {/* Dynamic Form Fields Based on Claim Type */}
-                  {claimType === "transportation" && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4"
-                    >
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-2 text-gray-700">
-                          <Car className="h-4 w-4" />
-                          Transport Mode
-                        </Label>
-                        <Select name="transportMode" required>
-                          <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
-                            <SelectValue placeholder="Select transport mode" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {transportModes.map((mode) => (
-                              <SelectItem key={mode} value={mode}>
-                                {mode.charAt(0).toUpperCase() + mode.slice(1)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-2 text-gray-700">
-                          <Hash className="h-4 w-4" />
-                          Registration Number
-                        </Label>
-                        <Input 
-                          name="registrationNumber" 
-                          placeholder="GT 1234-20"
-                          className="focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-2 text-gray-700">
-                          <Car className="h-4 w-4" />
-                          Cubic Capacity (cc)
-                        </Label>
-                        <Input 
-                          name="cubicCapacity" 
-                          type="number"
-                          placeholder="2000"
-                          className="focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-2 text-gray-700">
-                          <MapPin className="h-4 w-4" />
-                          Destination From
-                        </Label>
-                        <Input 
-                          name="destinationFrom" 
-                          required 
-                          placeholder="Starting location"
-                          className="focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-2 text-gray-700">
-                          <MapPin className="h-4 w-4" />
-                          Destination To
-                        </Label>
-                        <Input 
-                          name="destinationTo" 
-                          required 
-                          placeholder="Destination"
-                          className="focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-2 text-gray-700">
-                          <Calendar className="h-4 w-4" />
-                          Date
-                        </Label>
-                        <Input 
-                          name="date" 
-                          required 
-                          type="date"
-                          className="focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-2 text-gray-700">
-                          <MapPin className="h-4 w-4" />
-                          Distance (km)
-                        </Label>
-                        <Input 
-                          name="distance" 
-                          required 
-                          type="number"
-                          placeholder="Distance in kilometers"
-                          className="focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                    </motion.div>
-                  )}
-
                   {claimType === "teaching" && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4"
+                      className="space-y-6 pt-4"
                     >
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-2 text-gray-700">
-                          <Calendar className="h-4 w-4" />
-                          Date
-                        </Label>
-                        <Input 
-                          name="date" 
-                          required 
-                          type="date"
-                          className="focus:ring-2 focus:ring-blue-500"
-                        />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2 text-gray-700">
+                            <Calendar className="h-4 w-4" />
+                            Date
+                          </Label>
+                          <Input 
+                            name="date" 
+                            required 
+                            type="date"
+                            title="Select the date of the teaching activity"
+                            className="focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2 text-gray-700">
+                            <Book className="h-4 w-4" />
+                            Course Code
+                          </Label>
+                          <Input 
+                            name="courseCode" 
+                            required 
+                            type="text"
+                            title="Enter the course code"
+                            placeholder="CS-101"
+                            className="focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2 text-gray-700">
+                            <Clock className="h-4 w-4" />
+                            Contact Hours
+                          </Label>
+                          <Input 
+                            name="contactHours" 
+                            required 
+                            type="number"
+                            min="1"
+                            title="Enter the number of contact hours"
+                            placeholder="2"
+                            className="focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2 text-gray-700">
+                            <Clock className="h-4 w-4" />
+                            Start Time
+                          </Label>
+                          <Input 
+                            name="startTime" 
+                            required 
+                            type="time"
+                            title="Select the start time"
+                            className="focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2 text-gray-700">
+                            <Clock className="h-4 w-4" />
+                            End Time
+                          </Label>
+                          <Input 
+                            name="endTime" 
+                            required 
+                            type="time"
+                            title="Select the end time"
+                            className="focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-2 text-gray-700">
-                          <Book className="h-4 w-4" />
-                          Course Code
-                        </Label>
-                        <Input 
-                          name="courseCode" 
-                          required 
-                          placeholder="CS-101"
-                          className="focus:ring-2 focus:ring-blue-500"
-                        />
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-2">
+                          <input
+                        
+                            type="checkbox"
+                            id="isTransportation"
+                            name="isTransportation"
+                            checked={isTransportation}
+                            onChange={(e) => setIsTransportation(e.target.checked)}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <Label htmlFor="isTransportation" className="flex items-center gap-2 text-gray-700">
+                            <Car className="h-4 w-4" />
+                            Include Transportation Claim
+                          </Label>
+                        </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-2 text-gray-700">
-                          <Clock className="h-4 w-4" />
-                          Number of Contact Hours
-                        </Label>
-                        <Input 
-                          name="contactHours" 
-                          required 
-                          type="number"
-                          placeholder="2"
-                          className="focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
+                      {isTransportation && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          transition={{ duration: 0.3 }}
+                          className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4 border border-blue-100 rounded-lg"
+                        >
+                          <div className="space-y-2">
+                            <Label className="flex items-center gap-2 text-gray-700">
+                              <Car className="h-4 w-4" />
+                              Transport Mode
+                            </Label>
+                            <Select 
+                              name="transportMode" 
+                              required
+                            
+                            >
+                              <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
+                                <SelectValue placeholder="Select transport mode" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {transportModes.map((mode) => (
+                                  <SelectItem key={mode} value={mode}>
+                                    {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
 
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-2 text-gray-700">
-                          <Clock className="h-4 w-4" />
-                          Start Time
-                        </Label>
-                        <Input 
-                          name="startTime" 
-                          required 
-                          type="time"
-                          className="focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
+                          <div className="space-y-2">
+                            <Label className="flex items-center gap-2 text-gray-700">
+                              <Hash className="h-4 w-4" />
+                              Registration Number
+                            </Label>
+                            <Input 
+                              name="registrationNumber" 
+                              type="text"
+                              title="Enter vehicle registration number"
+                              placeholder="GT 1234-20"
+                              className="focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
 
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-2 text-gray-700">
-                          <Clock className="h-4 w-4" />
-                          End Time
-                        </Label>
-                        <Input 
-                          name="endTime" 
-                          required 
-                          type="time"
-                          className="focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
+                          <div className="space-y-2">
+                            <Label className="flex items-center gap-2 text-gray-700">
+                              <Car className="h-4 w-4" />
+                              Cubic Capacity (cc)
+                            </Label>
+                            <Input 
+                              name="cubicCapacity" 
+                              type="number"
+                              min="0"
+                              title="Enter vehicle engine capacity in cubic centimeters"
+                              placeholder="2000"
+                              className="focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="flex items-center gap-2 text-gray-700">
+                              <MapPin className="h-4 w-4" />
+                              From
+                            </Label>
+                            <Input 
+                              name="from" 
+                              type="text"
+                              title="Enter starting location"
+                              placeholder="Starting location"
+                              className="focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="flex items-center gap-2 text-gray-700">
+                              <MapPin className="h-4 w-4" />
+                              To
+                            </Label>
+                            <Input 
+                              name="to" 
+                              type="text"
+                              title="Enter destination"
+                              placeholder="Destination"
+                              className="focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="flex items-center gap-2 text-gray-700">
+                              <MapPin className="h-4 w-4" />
+                              Distance (km)
+                            </Label>
+                            <Input 
+                              name="distance" 
+                              type="number"
+                              min="0"
+                              step="0.1"
+                              title="Enter distance in kilometers"
+                              placeholder="Distance in kilometers"
+                              className="focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                        </motion.div>
+                      )}
                     </motion.div>
                   )}
 
@@ -414,83 +465,169 @@ export default function ClaimsPage() {
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4"
+                      className="space-y-6 pt-4"
                     >
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-2 text-gray-700">
-                          <Book className="h-4 w-4" />
-                          Thesis Type
-                        </Label>
-                        <Select name="thesisType" required>
-                          <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
-                            <SelectValue placeholder="Select thesis type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {thesisTypes.map((type) => (
-                              <SelectItem key={type} value={type}>
-                                {type.charAt(0).toUpperCase() + type.slice(1)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2 text-gray-700">
+                            <Book className="h-4 w-4" />
+                            Thesis/Project Type
+                          </Label>
+                          <Select 
+                            name="thesisType" 
+                            required
+                          
+                            onValueChange={handleThesisTypeChange}
+                            defaultValue="supervision"
+                          >
+                            <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {thesisTypes.map((type) => (
+                                <SelectItem key={type} value={type}>
+                                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2 text-gray-700">
+                            <Award className="h-4 w-4" />
+                            Degree
+                          </Label>
+                          <Select 
+                            name="degree" 
+                            required
+                          
+                          >
+                            <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
+                              <SelectValue placeholder="Select degree" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {degrees.map((degree) => (
+                                <SelectItem key={degree} value={degree}>
+                                  {degree}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2 text-gray-700">
+                            <Book className="h-4 w-4" />
+                            Course Code
+                          </Label>
+                          <Input 
+                            name="courseCode" 
+                            required 
+                            type="text"
+                            title="Enter the course code"
+                            placeholder="CS-101"
+                            className="focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="flex items-center gap-2 text-gray-700">
+                            <Calendar className="h-4 w-4" />
+                            Date
+                          </Label>
+                          <Input 
+                            name="date" 
+                            required 
+                            type="date"
+                            title="Select the date of the thesis activity"
+                            className="focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-2 text-gray-700">
-                          <Award className="h-4 w-4" />
-                          Degree
-                        </Label>
-                        <Select name="degree" required>
-                          <SelectTrigger className="focus:ring-2 focus:ring-blue-500">
-                            <SelectValue placeholder="Select degree" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {degrees.map((degree) => (
-                              <SelectItem key={degree} value={degree}>
-                                {degree}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      <Separator className="my-4 bg-blue-100" />
 
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-2 text-gray-700">
-                          <Hash className="h-4 w-4" />
-                          Student Number
-                        </Label>
-                        <Input 
-                          name="studentNumber" 
-                          required 
-                          placeholder="STD-12345"
-                          className="focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <h3 className="font-medium flex items-center gap-2">
+                            <Users className="h-4 w-4" />
+                            Students {thesisType === "supervision" ? "(Max 10)" : ""}
+                          </h3>
+                          {thesisType === "supervision" && (
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={removeStudentField}
+                                disabled={studentCount <= 1}
+                                className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                              >
+                                Remove
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={addStudentField}
+                                disabled={studentCount >= 10}
+                                className="border-blue-300 text-blue-600 hover:bg-blue-50"
+                              >
+                                Add Student
+                              </Button>
+                            </div>
+                          )}
+                        </div>
 
-                      <div className="space-y-2">
-                        <Label className="flex items-center gap-2 text-gray-700">
-                          <User className="h-4 w-4" />
-                          Student Name
-                        </Label>
-                        <Input 
-                          name="studentName" 
-                          required 
-                          placeholder="John Doe"
-                          className="focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
+                        {Array.from({ length: thesisType === "supervision" ? studentCount : 1 }).map((_, index) => (
+                          <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border border-blue-100 rounded-lg">
+                            <div className="space-y-2">
+                              <Label className="flex items-center gap-2 text-gray-700">
+                                <Hash className="h-4 w-4" />
+                                Student Number
+                              </Label>
+                              <Input 
+                                name={`studentNumber-${index}`}
+                                required 
+                                type="text"
+                                title={`Enter student ${index + 1}'s number`}
+                                placeholder={`STD-${index + 1}`}
+                                className="focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
 
-                      <div className="space-y-2 col-span-1 md:col-span-2">
-                        <Label className="flex items-center gap-2 text-gray-700">
-                          <Book className="h-4 w-4" />
-                          Title of Thesis
-                        </Label>
-                        <Input 
-                          name="thesisTitle" 
-                          required 
-                          placeholder="Thesis title"
-                          className="focus:ring-2 focus:ring-blue-500"
-                        />
+                            <div className="space-y-2">
+                              <Label className="flex items-center gap-2 text-gray-700">
+                                <User className="h-4 w-4" />
+                                Student Name
+                              </Label>
+                              <Input 
+                                name={`studentName-${index}`}
+                                required 
+                                type="text"
+                                title={`Enter student ${index + 1}'s name`}
+                                placeholder="John Doe"
+                                className="focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label className="flex items-center gap-2 text-gray-700">
+                                <File className="h-4 w-4" />
+                                Thesis/Project Title
+                              </Label>
+                              <Input 
+                                name={`thesisTitle-${index}`}
+                                required 
+                                type="text"
+                                title={`Enter thesis/project title for student ${index + 1}`}
+                                placeholder="Thesis/Project title"
+                                className="focus:ring-2 focus:ring-blue-500"
+                              />
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </motion.div>
                   )}
